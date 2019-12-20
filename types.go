@@ -263,73 +263,73 @@ type ComponentResources struct {
 	DestinationRule    string   `json:"DestinationRule,omitempty"`
 }
 
-func (app *Application) Validation() (bool, error) {
+func (app *Application) Validation() error {
 	if app.Name == "" {
-		return false, fmt.Errorf("Please input application name.")
+		return fmt.Errorf("Please input application name.")
 	}
 	if _, ok := app.Labels["projectId"]; !ok {
-		return false, fmt.Errorf("projectId not in Application Labels,Please add it.")
+		return fmt.Errorf("projectId not in Application Labels,Please add it.")
 	}
 	if _, ok := app.Labels["applicationTemplateId"]; !ok {
-		return false, fmt.Errorf("applicationTemplateId not in Application Labels,Please add it.")
+		return fmt.Errorf("applicationTemplateId not in Application Labels,Please add it.")
 	}
 	for _, com := range app.Spec.Components {
 		if com.Name == "" {
-			return false, fmt.Errorf("Please input component name.")
+			return fmt.Errorf("Please input component name.")
 		}
 		if !(com.WorkloadType == "Server") {
-			return false, fmt.Errorf("WorkloadType Need be Server.")
+			return fmt.Errorf("WorkloadType Need be Server.")
 		}
 		if com.Version == "" {
-			return false, fmt.Errorf("Please specify the version.")
+			return fmt.Errorf("Please specify the version.")
 		}
 		for _, con := range com.Containers {
 			if con.Name == "" {
-				return false, fmt.Errorf("Please specify the %s's container name.", com.Name)
+				return fmt.Errorf("Please specify the %s's container name.", com.Name)
 			}
 			if len(con.Config) != 0 {
 				for _, v := range con.Config {
 					if v.Path == "" || v.Value == "" {
-						return false, fmt.Errorf("application.components.container.config's path and value can't be empty at the same time")
+						return fmt.Errorf("application.components.container.config's path and value can't be empty at the same time")
 					}
 					matched, err := regexp.MatchString(`^\/(\w+\/?)+$`, v.Path)
 					if err != nil {
-						return false, fmt.Errorf("Regexp application.components.containers.config.path's failed, ErrorInfo is %s", err)
+						return fmt.Errorf("Regexp application.components.containers.config.path's failed, ErrorInfo is %s", err)
 					}
 					if !matched {
-						return false, fmt.Errorf("application.components.containers.config.path's syntax is err")
+						return fmt.Errorf("application.components.containers.config.path's syntax is err")
 					}
 				}
 			}
 			if con.Image == "" {
-				return false, fmt.Errorf("Image can't be empty")
+				return fmt.Errorf("Image can't be empty")
 			}
 			if len(con.Ports) != 0 {
 				for _, port := range con.Ports {
 					if port.ContainerPort <= 0 {
-						return false, fmt.Errorf("Please input correct port.")
+						return fmt.Errorf("Please input correct port.")
 					}
 				}
 			}
 			if !(reflect.DeepEqual(con.Resources, CResource{})) {
 				matched, err := regexp.MatchString(`^[0-9]\d*[Mi,Gi]*$`, con.Resources.Memory)
 				if err != nil {
-					return false, fmt.Errorf("Regexp application.components.containers.resources.memory failed, ErrorInfo is %s", err)
+					return fmt.Errorf("Regexp application.components.containers.resources.memory failed, ErrorInfo is %s", err)
 				}
 				if !matched {
-					return false, fmt.Errorf("application.components.containers.resources.memory's syntax is err")
+					return fmt.Errorf("application.components.containers.resources.memory's syntax is err")
 				}
 				matched, err = regexp.MatchString(`^[0-9]\d*m$`, con.Resources.Cpu)
 				if err != nil {
-					return false, fmt.Errorf("Regexp application.components.containers.resources.cpu failed, ErrorInfo is %s", err)
+					return fmt.Errorf("Regexp application.components.containers.resources.cpu failed, ErrorInfo is %s", err)
 				}
 				if !matched {
-					return false, fmt.Errorf("application.components.containers.resources.cpu's syntax is err")
+					return fmt.Errorf("application.components.containers.resources.cpu's syntax is err")
 				}
 				if len(con.Resources.Volumes) != 0 {
 					for _, v := range con.Resources.Volumes {
 						if v.Name == "" || v.MountPath == "" {
-							return false, fmt.Errorf("application.components.container.resource.volumes's name and mountpath can't be empty at the same time")
+							return fmt.Errorf("application.components.container.resource.volumes's name and mountpath can't be empty at the same time")
 						}
 					}
 				}
@@ -338,29 +338,29 @@ func (app *Application) Validation() (bool, error) {
 		if !(reflect.DeepEqual(com.DevTraits, ComponentTraitsForDev{})) {
 			if !(com.DevTraits.ImagePullConfig == ImagePullConfig{}) {
 				if com.DevTraits.ImagePullConfig.Registry == "" || com.DevTraits.ImagePullConfig.Password == "" || com.DevTraits.ImagePullConfig.Username == "" {
-					return false, fmt.Errorf("application.components.devtraits.imagepullconfig's username、password and registry can't be empty at the same time")
+					return fmt.Errorf("application.components.devtraits.imagepullconfig's username、password and registry can't be empty at the same time")
 				}
 			}
 		}
 		if (reflect.DeepEqual(com.OptTraits, ComponentTraitsForOpt{})) {
-			return false, fmt.Errorf("application.components.opttraits.ingress must be configured")
+			return fmt.Errorf("application.components.opttraits.ingress must be configured")
 		} else {
 			if (com.OptTraits.Ingress == AppIngress{}) {
-				return false, fmt.Errorf("application.components.opttraits.ingress must be configured")
+				return fmt.Errorf("application.components.opttraits.ingress must be configured")
 			} else {
 				if com.OptTraits.Ingress.Host == "" || com.OptTraits.Ingress.Path == "" || com.OptTraits.Ingress.ServerPort <= 0 {
-					return false, fmt.Errorf("application.components.opttraits.ingress's host、path and serverPort can't be empty at the same time")
+					return fmt.Errorf("application.components.opttraits.ingress's host、path and serverPort can't be empty at the same time")
 				} else {
 					matched, err := regexp.MatchString(`^\/(\w+\/?)+$`, com.OptTraits.Ingress.Path)
 					if err != nil {
-						return false, fmt.Errorf("Regexp application.components.opttraits.ingress's failed, ErrorInfo is %s", err)
+						return fmt.Errorf("Regexp application.components.opttraits.ingress's failed, ErrorInfo is %s", err)
 					}
 					if !matched {
-						return false, fmt.Errorf("application.components.opttraits.ingress.path's syntax is err")
+						return fmt.Errorf("application.components.opttraits.ingress.path's syntax is err")
 					}
 				}
 			}
 		}
 	}
-	return true, nil
+	return nil
 }

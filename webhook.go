@@ -185,15 +185,10 @@ func createPatch(availableAnnotations map[string]string, annotations map[string]
 // validate deployments and services
 func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
-	var (
-		availableLabels                 map[string]string
-		objectMeta                      *metav1.ObjectMeta
-		resourceNamespace, resourceName string
-	)
-
-	glog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v (%v) UID=%v patchOperation=%v UserInfo=%v",
-		req.Kind, req.Namespace, req.Name, resourceName, req.UID, req.Operation, req.UserInfo)
-
+	glog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v",
+		req.Kind, req.Namespace, req.Name)
+	allowed := true
+	var result *metav1.Status
 	if req.Kind.Kind == "Application" {
 		var application Application
 		if err := json.Unmarshal(req.Object.Raw, &application); err != nil {
@@ -205,37 +200,15 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 			}
 		}
 		glog.Infoln(application)
-		allowed := false
-		result := &metav1.Status{
-			Reason: "required labels are not set",
-		}
-		return &v1beta1.AdmissionResponse{
-			Allowed: allowed,
-			Result:  result,
-		}
-	}
-
-	if !validationRequired(ignoredNamespaces, objectMeta) {
-		glog.Infof("Skipping validation for %s/%s due to policy check", resourceNamespace, resourceName)
-		return &v1beta1.AdmissionResponse{
-			Allowed: true,
-		}
-	}
-
-	allowed := true
-	var result *metav1.Status
-	glog.Info("available labels:", availableLabels)
-	glog.Info("required labels", requiredLabels)
-	for _, rl := range requiredLabels {
-		if _, ok := availableLabels[rl]; !ok {
+		err := application.Validation()
+		if err != nil {
 			allowed = false
 			result = &metav1.Status{
-				Reason: "required labels are not set",
+				Reason:  "Some fields fail validation",
+				Message: err.Error(),
 			}
-			break
 		}
 	}
-
 	return &v1beta1.AdmissionResponse{
 		Allowed: allowed,
 		Result:  result,
