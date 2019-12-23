@@ -307,12 +307,12 @@ func (app *Application) Validation() error {
 			if len(con.Ports) != 0 {
 				for _, port := range con.Ports {
 					if port.ContainerPort <= 0 {
-						return fmt.Errorf("Please input correct port.")
+						return fmt.Errorf("Please input correct ContainerPort.")
 					}
 				}
 			}
 			if !(reflect.DeepEqual(con.Resources, CResource{})) {
-				matched, err := regexp.MatchString(`^[0-9]\d*[Mi,Gi]*$`, con.Resources.Memory)
+				matched, err := regexp.MatchString(`^[0-9]\d*[M,G]i$`, con.Resources.Memory)
 				if err != nil {
 					return fmt.Errorf("Regexp application.components.containers.resources.memory failed, ErrorInfo is %s", err)
 				}
@@ -325,6 +325,9 @@ func (app *Application) Validation() error {
 				}
 				if !matched {
 					return fmt.Errorf("application.components.containers.resources.cpu's syntax is err")
+				}
+				if con.Resources.Gpu <= 0 {
+					return fmt.Errorf("Regexp application.components.containers.resources.memory failed, ErrorInfo is %s", err)
 				}
 				if len(con.Resources.Volumes) != 0 {
 					for _, v := range con.Resources.Volumes {
@@ -351,13 +354,14 @@ func (app *Application) Validation() error {
 				if com.OptTraits.Ingress.Host == "" || com.OptTraits.Ingress.Path == "" || com.OptTraits.Ingress.ServerPort <= 0 {
 					return fmt.Errorf("application.components.opttraits.ingress's host、path and serverPort can't be empty at the same time")
 				} else {
-					matched, err := regexp.MatchString(`^\/(\w+\/?)+$`, com.OptTraits.Ingress.Path)
-					if err != nil {
-						return fmt.Errorf("Regexp application.components.opttraits.ingress's failed, ErrorInfo is %s", err)
+					//matched, err := regexp.MatchString(`^\/(\w+\/?)+$`, com.OptTraits.Ingress.Path)
+					if com.OptTraits.Ingress.Path != "/" {
+						//return fmt.Errorf("Regexp application.components.opttraits.ingress's failed, ErrorInfo is %s", err)
+						return fmt.Errorf("application.components.opttraits.ingress's path must be /")
 					}
-					if !matched {
+					/*if !matched {
 						return fmt.Errorf("application.components.opttraits.ingress.path's syntax is err")
-					}
+					}*/
 				}
 			}
 		}
