@@ -10,7 +10,8 @@ import (
 	"github.com/golang/glog"
 	"k8s.io/api/admission/v1beta1"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
-	v1 "k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -82,11 +83,11 @@ type patchOperation struct {
 }
 
 func init() {
-	_ = v1.AddToScheme(runtimeScheme)
+	_ = corev1.AddToScheme(runtimeScheme)
 	_ = admissionregistrationv1beta1.AddToScheme(runtimeScheme)
 	// defaulting with webhooks:
 	// https://github.com/kubernetes/kubernetes/issues/57982
-	_ = v1.AddToScheme(runtimeScheme)
+	_ = corev1.AddToScheme(runtimeScheme)
 }
 
 func admissionRequired(ignoredList []string, admissionAnnotationKey string, metadata *metav1.ObjectMeta) bool {
@@ -243,20 +244,20 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		req.Kind, req.Namespace, req.Name, resourceName, req.UID, req.Operation, req.UserInfo)
 
 	switch req.Kind.Kind {
-	/*case "Deployment":
-	var deployment appsv1.Deployment
-	if err := json.Unmarshal(req.Object.Raw, &deployment); err != nil {
-		glog.Errorf("Could not unmarshal raw object: %v", err)
-		return &v1beta1.AdmissionResponse{
-			Result: &metav1.Status{
-				Message: err.Error(),
-			},
+	case "Deployment":
+		var deployment appsv1.Deployment
+		if err := json.Unmarshal(req.Object.Raw, &deployment); err != nil {
+			glog.Errorf("Could not unmarshal raw object: %v", err)
+			return &v1beta1.AdmissionResponse{
+				Result: &metav1.Status{
+					Message: err.Error(),
+				},
+			}
 		}
-	}
-	resourceName, resourceNamespace, objectMeta = deployment.Name, deployment.Namespace, &deployment.ObjectMeta
-	availableLabels = deployment.Labels*/
+		resourceName, resourceNamespace, objectMeta = deployment.Name, deployment.Namespace, &deployment.ObjectMeta
+		availableLabels = deployment.Labels
 	case "Pod":
-		var pod v1.Pod
+		var pod corev1.Pod
 		if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
 			glog.Errorf("Could not unmarshal raw object: %v", err)
 			return &v1beta1.AdmissionResponse{
@@ -268,8 +269,8 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		resourceName, resourceNamespace, objectMeta = pod.Name, pod.Namespace, &pod.ObjectMeta
 		availableLabels = pod.Labels
 		//podavailableLabels = deployment.Spec.Template.Labels
-		/*case "Service":
-		var service v1.Service
+	case "Service":
+		var service corev1.Service
 		if err := json.Unmarshal(req.Object.Raw, &service); err != nil {
 			glog.Errorf("Could not unmarshal raw object: %v", err)
 			return &v1beta1.AdmissionResponse{
@@ -279,7 +280,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 			}
 		}
 		resourceName, resourceNamespace, objectMeta = service.Name, service.Namespace, &service.ObjectMeta
-		availableLabels = service.Labels*/
+		availableLabels = service.Labels
 	}
 	if !mutationRequired(ignoredNamespaces, objectMeta) {
 		glog.Infof("Skipping validation for %s/%s due to policy check", resourceNamespace, resourceName)
@@ -290,7 +291,6 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 
 	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "mutated"}
 	addLabels := map[string]string{"service-pool": "in"}
-	//patchBytes, err := createPatch(availableAnnotations, annotations, availableLabels, addLabels, podavailableLabels)
 	patchBytes, err := createPatch(availableAnnotations, annotations, availableLabels, addLabels)
 	if err != nil {
 		return &v1beta1.AdmissionResponse{
