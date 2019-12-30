@@ -39,14 +39,14 @@ var (
 		partOfLabel,
 		managedByLabel,
 	}
-	addLabels = map[string]string{
+	/*addLabels = map[string]string{
 		nameLabel:      NA,
 		instanceLabel:  NA,
 		versionLabel:   NA,
 		componentLabel: NA,
 		partOfLabel:    NA,
 		managedByLabel: NA,
-	}
+	}*/
 )
 
 const (
@@ -240,7 +240,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		}
 		resourceName, resourceNamespace, objectMeta = deployment.Name, deployment.Namespace, &deployment.ObjectMeta
 		availableLabels = deployment.Labels
-	case "Service":
+	/*case "Service":
 		var service v1.Service
 		if err := json.Unmarshal(req.Object.Raw, &service); err != nil {
 			glog.Errorf("Could not unmarshal raw object: %v", err)
@@ -252,7 +252,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		}
 		resourceName, resourceNamespace, objectMeta = service.Name, service.Namespace, &service.ObjectMeta
 		availableLabels = service.Labels
-	}
+	}*/
 
 	if !mutationRequired(ignoredNamespaces, objectMeta) {
 		glog.Infof("Skipping validation for %s/%s due to policy check", resourceNamespace, resourceName)
@@ -262,6 +262,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 	}
 
 	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "mutated"}
+	addLabels := map[string]string{"service-pool": "in",}
 	patchBytes, err := createPatch(availableAnnotations, annotations, availableLabels, addLabels)
 	if err != nil {
 		return &v1beta1.AdmissionResponse{
