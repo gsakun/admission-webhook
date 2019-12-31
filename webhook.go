@@ -139,7 +139,6 @@ func validationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool 
 func updateAnnotation(target map[string]string, added map[string]string) (patch []patchOperation) {
 	for key, value := range added {
 		if target == nil || target[key] == "" {
-			target = map[string]string{}
 			patch = append(patch, patchOperation{
 				Op:   "add",
 				Path: "/metadata/annotations",
@@ -159,6 +158,27 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 }
 
 func updateLabels(target map[string]string, added map[string]string) (patch []patchOperation) {
+	for key, value := range added {
+		if target == nil || target[key] == "" {
+			patch = append(patch, patchOperation{
+				Op:   "add",
+				Path: "/metadata/labels",
+				Value: map[string]string{
+					key: value,
+				},
+			})
+		} else {
+			patch = append(patch, patchOperation{
+				Op:    "replace",
+				Path:  "/metadata/labels/" + key,
+				Value: value,
+			})
+		}
+	}
+	return patch
+}
+
+/*func updateLabels(target map[string]string, added map[string]string) (patch []patchOperation) {
 	values := make(map[string]string)
 	for key, value := range added {
 		if target == nil || target[key] == "" {
@@ -168,21 +188,6 @@ func updateLabels(target map[string]string, added map[string]string) (patch []pa
 	patch = append(patch, patchOperation{
 		Op:    "add",
 		Path:  "/metadata/labels",
-		Value: values,
-	})
-	return patch
-}
-
-/*func updateSpecTemplateMetadateLabels(target map[string]string, added map[string]string) (patch []patchOperation) {
-	values := make(map[string]string)
-	for key, value := range added {
-		if target == nil || target[key] == "" {
-			values[key] = value
-		}
-	}
-	patch = append(patch, patchOperation{
-		Op:    "add",
-		Path:  "/spec/template/metadata/labels",
 		Value: values,
 	})
 	return patch
@@ -256,6 +261,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		}
 		resourceName, resourceNamespace, objectMeta = deployment.Name, deployment.Namespace, &deployment.ObjectMeta
 		availableLabels = deployment.Labels
+		availableAnnotations = deployment.Annotations
 	case "Pod":
 		var pod corev1.Pod
 		if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
@@ -268,6 +274,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		}
 		resourceName, resourceNamespace, objectMeta = pod.Name, pod.Namespace, &pod.ObjectMeta
 		availableLabels = pod.Labels
+		availableAnnotations = pod.Annotations
 		//podavailableLabels = deployment.Spec.Template.Labels
 	case "Service":
 		var service corev1.Service
@@ -281,6 +288,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		}
 		resourceName, resourceNamespace, objectMeta = service.Name, service.Namespace, &service.ObjectMeta
 		availableLabels = service.Labels
+		availableAnnotations = service.Annotations
 	}
 	if !mutationRequired(ignoredNamespaces, objectMeta) {
 		glog.Infof("Skipping validation for %s/%s due to policy check", resourceNamespace, resourceName)
