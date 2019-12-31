@@ -140,11 +140,9 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 	for key, value := range added {
 		if target == nil || target[key] == "" {
 			patch = append(patch, patchOperation{
-				Op:   "add",
-				Path: "/metadata/annotations",
-				Value: map[string]string{
-					key: value,
-				},
+				Op:    "add",
+				Path:  "/metadata/annotations/" + key,
+				Value: value,
 			})
 		} else {
 			patch = append(patch, patchOperation{
@@ -160,38 +158,16 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 func updateLabels(target map[string]string, added map[string]string) (patch []patchOperation) {
 	for key, value := range added {
 		if target == nil || target[key] == "" {
-			patch = append(patch, patchOperation{
-				Op:   "add",
-				Path: "/metadata/labels",
-				Value: map[string]string{
-					key: value,
-				},
-			})
-		} else {
-			patch = append(patch, patchOperation{
-				Op:    "replace",
-				Path:  "/metadata/labels/" + key,
-				Value: value,
-			})
-		}
-	}
-	return patch
-}
-
-/*func updateLabels(target map[string]string, added map[string]string) (patch []patchOperation) {
-	values := make(map[string]string)
-	for key, value := range added {
-		if target == nil || target[key] == "" {
-			values[key] = value
+			target[key] = value
 		}
 	}
 	patch = append(patch, patchOperation{
 		Op:    "add",
 		Path:  "/metadata/labels",
-		Value: values,
+		Value: target,
 	})
 	return patch
-}*/
+}
 
 func createPatch(availableAnnotations map[string]string, annotations map[string]string, availableLabels map[string]string, labels map[string]string) ([]byte, error) {
 	var patch []patchOperation
