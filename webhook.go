@@ -139,25 +139,24 @@ func validationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool 
 func updateAnnotation(target map[string]string, added map[string]string) (patch []patchOperation) {
 	for key, value := range added {
 		if target == nil || target[key] == "" {
-			patch = append(patch, patchOperation{
-				Op:    "add",
-				Path:  "/metadata/annotations/" + key,
-				Value: value,
-			})
+			target[key] = value
 		} else {
-			patch = append(patch, patchOperation{
-				Op:    "replace",
-				Path:  "/metadata/annotations/" + key,
-				Value: value,
-			})
+			target[key] = value
 		}
 	}
+	patch = append(patch, patchOperation{
+		Op:    "add",
+		Path:  "/metadata/annotations",
+		Value: target,
+	})
 	return patch
 }
 
 func updateLabels(target map[string]string, added map[string]string) (patch []patchOperation) {
 	for key, value := range added {
 		if target == nil || target[key] == "" {
+			target[key] = value
+		} else {
 			target[key] = value
 		}
 	}
