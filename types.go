@@ -340,9 +340,9 @@ func (app *Application) Validation() error {
 				if !matched2 {
 					return fmt.Errorf("application.components.containers.resources.cpu's syntax is err")
 				}
-				if con.Resources.Gpu <= 0 {
+				/*if con.Resources.Gpu <= 0 {
 					return fmt.Errorf("Regexp application.components.containers.resources.gpu must be greater than 0")
-				}
+				}*/
 				if len(con.Resources.Volumes) != 0 {
 					for _, v := range con.Resources.Volumes {
 						if v.Name == "" || v.MountPath == "" {
