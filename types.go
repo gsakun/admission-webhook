@@ -273,15 +273,29 @@ func (app *Application) Validation() error {
 	if _, ok := app.Labels["applicationTemplateId"]; !ok {
 		return fmt.Errorf("applicationTemplateId not in Application Labels,Please add it.")
 	}
+	var componentname string
+	var componentversion map[string]int = make(map[string]int)
 	for _, com := range app.Spec.Components {
 		if com.Name == "" {
 			return fmt.Errorf("Please input component name.")
+		}
+		if componentname == "" {
+			componentname = com.Name
+		} else {
+			if componentname != com.Name {
+				return fmt.Errorf("If the application has multiple components their names must be the same")
+			}
 		}
 		if !(com.WorkloadType == "Server") {
 			return fmt.Errorf("WorkloadType Need be Server.")
 		}
 		if com.Version == "" {
 			return fmt.Errorf("Please specify the version.")
+		}
+		if _, ok := componentversion[com.Version]; ok {
+			fmt.Errorf("The same component must have different versions")
+		} else {
+			componentversion[com.Version] = 1
 		}
 		for _, con := range com.Containers {
 			if con.Name == "" {
@@ -312,7 +326,7 @@ func (app *Application) Validation() error {
 				}
 			}
 			if !(reflect.DeepEqual(con.Resources, CResource{})) {
-				matched, err := regexp.MatchString(`^[0-9]\d*[M,G]i$`, con.Resources.Memory)
+				matched, err := regexp.MatchString(`^[0-9]\d*[MG]i$`, con.Resources.Memory)
 				if err != nil {
 					return fmt.Errorf("Regexp application.components.containers.resources.memory failed, ErrorInfo is %s", err)
 				}
@@ -358,7 +372,22 @@ func (app *Application) Validation() error {
 					if com.OptTraits.Ingress.Path != "/" {
 						//return fmt.Errorf("Regexp application.components.opttraits.ingress's failed, ErrorInfo is %s", err)
 						return fmt.Errorf("application.components.opttraits.ingress's path must be /")
+					} else {
+						if len(com.OptTraits.WhiteList.Users) != 0 {
+							for _, i := range com.OptTraits.WhiteList.Users {
+								matched, err := regexp.MatchString(`^.*@.*$`, i)
+								if err != nil {
+									return fmt.Errorf("Regexp application.components.opttraits.whitelist.users %s failed, ErrorInfo is %s", i, err)
+								}
+								if matched {
+									continue
+								} else {
+									return fmt.Errorf("Regexp application.components.opttraits.whitelist.users %s failed", i)
+								}
+							}
+						}
 					}
+
 					/*if !matched {
 						return fmt.Errorf("application.components.opttraits.ingress.path's syntax is err")
 					}*/
