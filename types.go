@@ -326,18 +326,18 @@ func (app *Application) Validation() error {
 				}
 			}
 			if !(reflect.DeepEqual(con.Resources, CResource{})) {
-				matched, err := regexp.MatchString(`^[0-9]\d*[MG]i$`, con.Resources.Memory)
-				if err != nil {
+				matched1, err1 := regexp.MatchString(`^[0-9]\d*[MG]i$`, con.Resources.Memory)
+				if err1 != nil {
 					return fmt.Errorf("Regexp application.components.containers.resources.memory failed, ErrorInfo is %s", err)
 				}
-				if !matched {
+				if !matched1 {
 					return fmt.Errorf("application.components.containers.resources.memory's syntax is err")
 				}
-				matched, err = regexp.MatchString(`^[0-9]\d*m$`, con.Resources.Cpu)
-				if err != nil {
+				matched2, err2 := regexp.MatchString(`^[0-9]\d*m$`, con.Resources.Cpu)
+				if err2 != nil {
 					return fmt.Errorf("Regexp application.components.containers.resources.cpu failed, ErrorInfo is %s", err)
 				}
-				if !matched {
+				if !matched2 {
 					return fmt.Errorf("application.components.containers.resources.cpu's syntax is err")
 				}
 				if con.Resources.Gpu <= 0 {
@@ -372,25 +372,27 @@ func (app *Application) Validation() error {
 					if com.OptTraits.Ingress.Path != "/" {
 						//return fmt.Errorf("Regexp application.components.opttraits.ingress's failed, ErrorInfo is %s", err)
 						return fmt.Errorf("application.components.opttraits.ingress's path must be /")
-					} else {
-						if len(com.OptTraits.WhiteList.Users) != 0 {
-							for _, i := range com.OptTraits.WhiteList.Users {
-								matched, err := regexp.MatchString(`^.*@.*$`, i)
-								if err != nil {
-									return fmt.Errorf("Regexp application.components.opttraits.whitelist.users %s failed, ErrorInfo is %s", i, err)
-								}
-								if matched {
-									continue
-								} else {
-									return fmt.Errorf("Regexp application.components.opttraits.whitelist.users %s failed", i)
-								}
-							}
-						}
 					}
-
-					/*if !matched {
-						return fmt.Errorf("application.components.opttraits.ingress.path's syntax is err")
-					}*/
+				}
+			}
+			if (com.OptTraits.ManualScaler == ManualScaler{}) {
+				return fmt.Errorf("component.opttraits.manualscaler field cannot be empty")
+			} else {
+				if com.OptTraits.ManualScaler.Replicas <= 0 {
+					return fmt.Errorf("component.opttraits.manualscaler.replicas must be greater than 0")
+				}
+			}
+			if len(com.OptTraits.WhiteList.Users) != 0 {
+				for _, i := range com.OptTraits.WhiteList.Users {
+					matched, err := regexp.MatchString(`^.*@.*$`, i)
+					if err != nil {
+						return fmt.Errorf("Regexp application.components.opttraits.whitelist.users %s failed, ErrorInfo is %s", i, err)
+					}
+					if matched {
+						continue
+					} else {
+						return fmt.Errorf("Regexp application.components.opttraits.whitelist.users %s failed", i)
+					}
 				}
 			}
 		}
