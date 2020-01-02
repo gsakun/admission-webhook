@@ -328,20 +328,20 @@ func (app *Application) Validation() error {
 			if !(reflect.DeepEqual(con.Resources, CResource{})) {
 				matched1, err1 := regexp.MatchString(`^[0-9]\d*[MG]i$`, con.Resources.Memory)
 				if err1 != nil {
-					return fmt.Errorf("Regexp application.components.containers.resources.memory failed, ErrorInfo is %s", err)
+					return fmt.Errorf("Regexp application.components.containers.resources.memory failed, ErrorInfo is %s", err1)
 				}
 				if !matched1 {
 					return fmt.Errorf("application.components.containers.resources.memory's syntax is err")
 				}
 				matched2, err2 := regexp.MatchString(`^[0-9]\d*m$`, con.Resources.Cpu)
 				if err2 != nil {
-					return fmt.Errorf("Regexp application.components.containers.resources.cpu failed, ErrorInfo is %s", err)
+					return fmt.Errorf("Regexp application.components.containers.resources.cpu failed, ErrorInfo is %s", err2)
 				}
 				if !matched2 {
 					return fmt.Errorf("application.components.containers.resources.cpu's syntax is err")
 				}
 				if con.Resources.Gpu <= 0 {
-					return fmt.Errorf("Regexp application.components.containers.resources.memory failed, ErrorInfo is %s", err)
+					return fmt.Errorf("Regexp application.components.containers.resources.gpu must be greater than 0")
 				}
 				if len(con.Resources.Volumes) != 0 {
 					for _, v := range con.Resources.Volumes {
