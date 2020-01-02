@@ -171,7 +171,7 @@ func updateLabels(target map[string]string, added map[string]string) (patch []pa
 func createPatch(availableAnnotations map[string]string, annotations map[string]string, availableLabels map[string]string, labels map[string]string) ([]byte, error) {
 	var patch []patchOperation
 
-	patch = append(patch, updateAnnotation(availableAnnotations, annotations)...)
+	//patch = append(patch, updateAnnotation(availableAnnotations, annotations)...)
 	patch = append(patch, updateLabels(availableLabels, labels)...)
 	//patch = append(patch, updateSpecTemplateMetadateLabels(podavailableLabels, labels)...)
 
