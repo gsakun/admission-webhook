@@ -138,11 +138,11 @@ func validationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool 
 
 func updateAnnotation(target map[string]string, added map[string]string) (patch []patchOperation) {
 	for key, value := range added {
-		if target == nil || target[key] == "" {
-			target[key] = value
-		} else {
-			target[key] = value
-		}
+		/*		if target == nil || target[key] == "" {
+				target[key] = value
+			} else {*/
+		target[key] = value
+		//}
 	}
 	patch = append(patch, patchOperation{
 		Op:    "add",
@@ -154,11 +154,11 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 
 func updateLabels(target map[string]string, added map[string]string) (patch []patchOperation) {
 	for key, value := range added {
-		if target == nil || target[key] == "" {
+		/*if target == nil || target[key] == "" {
 			target[key] = value
-		} else {
-			target[key] = value
-		}
+		} else {*/
+		target[key] = value
+		//}
 	}
 	patch = append(patch, patchOperation{
 		Op:    "add",
