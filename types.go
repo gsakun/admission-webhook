@@ -358,6 +358,17 @@ func (app *Application) Validation() error {
 					return fmt.Errorf("application.components.devtraits.imagepullconfig's username、password and registry can't be empty at the same time")
 				}
 			}
+			if !(com.DevTraits.IngressLB == IngressLB{}) {
+				if com.DevTraits.IngressLB.ConsistentType != "" && com.DevTraits.IngressLB.LBType != "" {
+					fmt.Errorf("You can only choose one of these two strategies")
+				}
+				if com.DevTraits.IngressLB.ConsistentType != "" && com.DevTraits.IngressLB.ConsistentType != "sourceIP" {
+					fmt.Errorf("application.components.devtraits.ingresslb.consistentType only support sourceIP")
+				}
+				if com.DevTraits.IngressLB.LBType != "" && !(com.DevTraits.IngressLB.LBType == "rr" || com.DevTraits.IngressLB.LBType == "leastConn" || com.DevTraits.IngressLB.LBType == "random") {
+					fmt.Errorf("application.components.devtraits.ingresslb.LBType only support rr leastConn random")
+				}
+			}
 		}
 		if (reflect.DeepEqual(com.OptTraits, ComponentTraitsForOpt{})) {
 			return fmt.Errorf("application.components.opttraits.ingress must be configured")
