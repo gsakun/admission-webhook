@@ -63,8 +63,21 @@ type ManualScaler struct {
 type ComponentTraitsForOpt struct {
 	ManualScaler  ManualScaler  `json:"manualScaler,omitempty"`
 	VolumeMounter VolumeMounter `json:"volumeMounter,omitempty"`
-	Ingress       AppIngress    `json:"ingress,omitempty"`
+	Ingress       AppIngress    `json:"ingress"`
 	WhiteList     WhiteList     `json:"whiteList,omitempty"`
+	Eject         []string      `json:"eject,omitempty"`
+	RateLimit     RateLimit     `json:"rateLimit,omitempty"`
+}
+
+type RateLimit struct {
+	TimeDuration  string     `json:"timeDuration"`
+	RequestAmount int32      `json:"requestAmount"`
+	Overrides     []Override `json:"overrides,omitempty"`
+}
+
+type Override struct {
+	RequestAmount int32  `json:"requestAmount"`
+	User          string `json:"user"`
 }
 
 //负载均衡类型 rr;leastConn;random
@@ -391,6 +404,18 @@ func (app *Application) Validation() error {
 			} else {
 				if com.OptTraits.ManualScaler.Replicas <= 0 {
 					return fmt.Errorf("component.opttraits.manualscaler.replicas must be greater than 0")
+				}
+			}
+			if !(reflect.DeepEqual(com.OptTraits.RateLimit, RateLimit{})) {
+				if com.OptTraits.RateLimit.TimeDuration == "" || com.OptTraits.RateLimit.RequestAmount <= 0 {
+					return fmt.Errorf("application.components.opttraits.ratelimit.timeduration and requestamount can't be empty at the same time")
+				}
+				if len(com.OptTraits.RateLimit.Overrides) != 0 {
+					for _, i := range com.OptTraits.RateLimit.Overrides {
+						if i.RequestAmount <= 0 || i.User == "" {
+							return fmt.Errorf("application.components.opttraits.ratelimit.overrides.user and requestamount can't be empty at the same time")
+						}
+					}
 				}
 			}
 			if len(com.OptTraits.WhiteList.Users) != 0 {
