@@ -24,7 +24,7 @@ jobs:
       uses: actions/checkout@v1
 
     - name: Build
-      run: CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -a -installsuffix cgo -o admission-webhooks/
+      run: CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -a -installsuffix cgo -o admission-webhook
   push:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
