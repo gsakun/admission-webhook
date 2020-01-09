@@ -1,0 +1,19 @@
+language: bash
+
+dist: xenial
+
+services:
+  - docker
+
+before_script:
+  # 登录到 docker hub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+script:
+  # 这里编写测试代码的命令
+  - CGO_ENABLED=0 GOOS=linux GO111MODULEgo build -a -installsuffix cgo -o admission-webhook
+
+after_success:
+  # 当代码测试通过后执行的命令
+  - docker build --target builder -t gsakun/admission-webhook:v1 .
+  - docker push gsakun/admission-webhook:v1
