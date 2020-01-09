@@ -44,6 +44,7 @@ jobs:
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
           # Use Docker `latest` tag convention
           [ "$VERSION" == "master" ] && VERSION=latest
+          echo "HELLO"
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
           docker tag webhookimage $IMAGE_ID:$VERSION
