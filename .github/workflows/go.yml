@@ -21,6 +21,6 @@ jobs:
           IMAGE_ID=gsakun/admission-webbook
           echo "HELLO"
           echo IMAGE_ID=$IMAGE_ID
-          VERSION=`date "+%Y%m%d"``
+          VERSION=`date "+%Y%m%d"`
           docker tag webhookimage $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
