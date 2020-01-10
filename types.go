@@ -338,7 +338,7 @@ func (app *Application) Validation() error {
 					}
 				}
 			}
-			if !(reflect.DeepEqual(con.Resources, CResource{}{})) {
+			if !(reflect.DeepEqual(con.Resources, CResource{})) {
 				matched1, err1 := regexp.MatchString(`^[0-9]\d*[MG]i$`, con.Resources.Memory)
 				if err1 != nil {
 					return fmt.Errorf("Regexp application.components.containers.resources.memory failed, ErrorInfo is %s", err1)
@@ -365,13 +365,13 @@ func (app *Application) Validation() error {
 				}
 			}
 		}
-		if !(reflect.DeepEqual(com.DevTraits, ComponentTraitsForDev{}{})) {
-			if !(com.DevTraits.ImagePullConfig == ImagePullConfig{}{}) {
+		if !(reflect.DeepEqual(com.DevTraits, ComponentTraitsForDev{})) {
+			if !(com.DevTraits.ImagePullConfig == ImagePullConfig{}) {
 				if com.DevTraits.ImagePullConfig.Registry == "" || com.DevTraits.ImagePullConfig.Password == "" || com.DevTraits.ImagePullConfig.Username == "" {
 					return fmt.Errorf("application.components.devtraits.imagepullconfig's username、password and registry can't be empty at the same time")
 				}
 			}
-			if !(com.DevTraits.IngressLB == IngressLB{}{}) {
+			if !(com.DevTraits.IngressLB == IngressLB{}) {
 				if com.DevTraits.IngressLB.ConsistentType != "" && com.DevTraits.IngressLB.LBType != "" {
 					fmt.Errorf("You can only choose one of these two strategies")
 				}
@@ -383,10 +383,10 @@ func (app *Application) Validation() error {
 				}
 			}
 		}
-		if (reflect.DeepEqual(com.OptTraits, ComponentTraitsForOpt{}{})) {
+		if (reflect.DeepEqual(com.OptTraits, ComponentTraitsForOpt{})) {
 			return fmt.Errorf("application.components.opttraits.ingress must be configured")
 		} else {
-			if (com.OptTraits.Ingress == AppIngress{}{}) {
+			if (com.OptTraits.Ingress == AppIngress{}) {
 				return fmt.Errorf("application.components.opttraits.ingress must be configured")
 			} else {
 				if com.OptTraits.Ingress.Host == "" || com.OptTraits.Ingress.Path == "" || com.OptTraits.Ingress.ServerPort <= 0 {
@@ -399,14 +399,14 @@ func (app *Application) Validation() error {
 					}
 				}
 			}
-			if (com.OptTraits.ManualScaler == ManualScaler{}{}) {
+			if (com.OptTraits.ManualScaler == ManualScaler{}) {
 				return fmt.Errorf("component.opttraits.manualscaler field cannot be empty")
 			} else {
 				if com.OptTraits.ManualScaler.Replicas <= 0 {
 					return fmt.Errorf("component.opttraits.manualscaler.replicas must be greater than 0")
 				}
 			}
-			if !(reflect.DeepEqual(com.OptTraits.RateLimit, RateLimit{}{})) {
+			if !(reflect.DeepEqual(com.OptTraits.RateLimit, RateLimit{})) {
 				if com.OptTraits.RateLimit.TimeDuration == "" || com.OptTraits.RateLimit.RequestAmount <= 0 {
 					return fmt.Errorf("application.components.opttraits.ratelimit.timeduration and requestamount can't be empty at the same time")
 				}
