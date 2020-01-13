@@ -1,4 +1,4 @@
-module github.com/cnych/admission-webhook-example
+module github.com/cnych/admission-webhook
 
 go 1.13
 
