@@ -280,6 +280,13 @@ func (app *Application) Validation() error {
 	if app.Name == "" {
 		return fmt.Errorf("Please input application name.")
 	}
+	matched, err := regexp.MatchString(`^[a-z]([-a-z0-9]*[a-z0-9])?`, app.Name)
+	if err != nil {
+		return fmt.Errorf("Regexp application.name failed, ErrorInfo is %s", err)
+	}
+	if !matched {
+		return fmt.Errorf("Application name %s is invalid a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name',  or 'abc-123', regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?'", app.Name)
+	}
 	if _, ok := app.Labels["projectId"]; !ok {
 		return fmt.Errorf("projectId not in Application Labels,Please add it.")
 	}
@@ -290,7 +297,14 @@ func (app *Application) Validation() error {
 	var componentversion map[string]int = make(map[string]int)
 	for _, com := range app.Spec.Components {
 		if com.Name == "" {
-			return fmt.Errorf("Please input component name.")
+			return fmt.Errorf("Component.name can't be empty")
+		}
+		matched, err := regexp.MatchString(`^[a-z]([-a-z0-9]*[a-z0-9])?`, com.Name)
+		if err != nil {
+			return fmt.Errorf("Regexp application.name failed, ErrorInfo is %s", err)
+		}
+		if !matched {
+			return fmt.Errorf("Component name %s is invalid a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name',  or 'abc-123', regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?'", com.Name)
 		}
 		if componentname == "" {
 			componentname = com.Name
