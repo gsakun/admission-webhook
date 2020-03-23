@@ -1,11 +1,6 @@
 package main
 
 import (
-	"fmt"
-
-	"reflect"
-	"regexp"
-
 	"github.com/rancher/norman/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -61,12 +56,121 @@ type ManualScaler struct {
 }
 
 type ComponentTraitsForOpt struct {
-	ManualScaler  ManualScaler  `json:"manualScaler,omitempty"`
-	VolumeMounter VolumeMounter `json:"volumeMounter,omitempty"`
-	Ingress       AppIngress    `json:"ingress"`
-	WhiteList     WhiteList     `json:"whiteList,omitempty"`
-	Eject         []string      `json:"eject,omitempty"`
-	RateLimit     RateLimit     `json:"rateLimit,omitempty"`
+	ManualScaler    ManualScaler    `json:"manualScaler,omitempty"`
+	VolumeMounter   VolumeMounter   `json:"volumeMounter,omitempty"`
+	Ingress         AppIngress      `json:"ingress"`
+	WhiteList       WhiteList       `json:"whiteList,omitempty"`
+	Eject           []string        `json:"eject,omitempty"`
+	Fusing          Fusing          `json:"fusing,omitempty"` //zk
+	RateLimit       RateLimit       `json:"rateLimit,omitempty"`
+	CircuitBreaking CircuitBreaking `json:"circuitbreaking,omitempty"` //zk
+}
+
+//zk
+type CircuitBreaking struct {
+	LoadBalancer      LoadBalancerSettings   `json:"loadBalancer,omitempty"`
+	ConnectionPool    ConnectionPoolSettings `json:"connectionPool,omitempty"`
+	OutlierDetection  OutlierDetection       `json:"outlierDetection,omitempty"`
+	PortLevelSettings []PortTrafficPolicy    `json:"portLevelSettings,omitempty"`
+}
+
+type ConnectionPoolSettings struct {
+
+	// Settings common to both HTTP and TCP upstream connections.
+	TCP TCPSettings `json:"tcp,omitempty"`
+
+	// HTTP connection pool settings.
+	HTTP HTTPSettings `json:"http,omitempty"`
+}
+
+type PortSelector struct {
+	// Choose one of the fields below.
+
+	// Valid port number
+	Number uint32 `json:"number,omitempty"`
+
+	// Valid port name
+	Name string `json:"name,omitempty"`
+}
+
+type OutlierDetection struct {
+	// Number of errors before a host is ejected from the connection
+	// pool. Defaults to 5. When the upstream host is accessed over HTTP, a
+	// 5xx return code qualifies as an error. When the upstream host is
+	// accessed over an opaque TCP connection, connect timeouts and
+	// connection error/failure events qualify as an error.
+	ConsecutiveErrors int32 `json:"consecutiveErrors,omitempty"`
+
+	// Time interval between ejection sweep analysis. format:
+	// 1h/1m/1s/1ms. MUST BE >=1ms. Default is 10s.
+	Interval string `json:"interval,omitempty"`
+
+	// Minimum ejection duration. A host will remain ejected for a period
+	// equal to the product of minimum ejection duration and the number of
+	// times the host has been ejected. This technique allows the system to
+	// automatically increase the ejection period for unhealthy upstream
+	// servers. format: 1h/1m/1s/1ms. MUST BE >=1ms. Default is 30s.
+	BaseEjectionTime string `json:"baseEjectionTime,omitempty"`
+
+	// Maximum % of hosts in the load balancing pool for the upstream
+	// service that can be ejected. Defaults to 10%.
+	MaxEjectionPercent int32 `json:"maxEjectionPercent,omitempty"`
+}
+
+// Settings common to both HTTP and TCP upstream connections.
+type TCPSettings struct {
+	// Maximum number of HTTP1 /TCP connections to a destination host.
+	MaxConnections int32 `json:"maxConnections,omitempty"`
+
+	// TCP connection timeout.
+	ConnectTimeout string `json:"connectTimeout,omitempty"`
+}
+
+// Settings applicable to HTTP1.1/HTTP2/GRPC connections.
+type HTTPSettings struct {
+	// Maximum number of pending HTTP requests to a destination. Default 1024.
+	HTTP1MaxPendingRequests int32 `json:"http1MaxPendingRequests,omitempty"`
+
+	// Maximum number of requests to a backend. Default 1024.
+	HTTP2MaxRequests int32 `json:"http2MaxRequests,omitempty"`
+
+	// Maximum number of requests per connection to a backend. Setting this
+	// parameter to 1 disables keep alive.
+	MaxRequestsPerConnection int32 `json:"maxRequestsPerConnection,omitempty"`
+
+	// Maximum number of retries that can be outstanding to all hosts in a
+	// cluster at a given time. Defaults to 3.
+	MaxRetries int32 `json:"maxRetries,omitempty"`
+}
+
+type SimpleLB string
+
+const (
+	// Round Robin policy. Default
+	SimpleLBRoundRobin SimpleLB = "ROUND_ROBIN"
+
+	// The least request load balancer uses an O(1) algorithm which selects
+	// two random healthy hosts and picks the host which has fewer active
+	// requests.
+	SimpleLBLeastConn SimpleLB = "LEAST_CONN"
+
+	// The random load balancer selects a random healthy host. The random
+	// load balancer generally performs better than round robin if no health
+	// checking policy is configured.
+	SimpleLBRandom SimpleLB = "RANDOM"
+
+	// This option will forward the connection to the original IP address
+	// requested by the caller without doing any form of load
+	// balancing. This option must be used with care. It is meant for
+	// advanced use cases. Refer to Original Destination load balancer in
+	// Envoy for further details.
+	SimpleLBPassthrough SimpleLB = "PASSTHROUGH"
+)
+
+//zk
+type Fusing struct {
+	PodList []string `json:"podlist,omitempty"`
+	Action  string   `json:"action,omitempty"`
 }
 
 type RateLimit struct {
@@ -78,6 +182,24 @@ type RateLimit struct {
 type Override struct {
 	RequestAmount int32  `json:"requestAmount"`
 	User          string `json:"user"`
+}
+
+// Traffic policies that apply to specific ports of the service
+type PortTrafficPolicy struct {
+	Port             PortSelector           `json:"port"`
+	LoadBalancer     LoadBalancerSettings   `json:"loadBalancer,omitempty"`
+	ConnectionPool   ConnectionPoolSettings `json:"connectionPool,omitempty"`
+	OutlierDetection OutlierDetection       `json:"outlierDetection,omitempty"`
+}
+type LoadBalancerSettings struct {
+	Simple         SimpleLB         `json:"simple,omitempty"`
+	ConsistentHash ConsistentHashLB `json:"consistentHash,omitempty"`
+}
+
+type ConsistentHashLB struct {
+	HTTPHeaderName  string `json:"httpHeaderName,omitempty"`
+	UseSourceIP     bool   `json:"useSourceIp,omitempty"`
+	MinimumRingSize uint64 `json:"minimumRingSize,omitempty"`
 }
 
 //负载均衡类型 rr;leastConn;random
@@ -94,17 +216,17 @@ type ImagePullConfig struct {
 }
 
 type ComponentTraitsForDev struct {
-	ImagePullConfig ImagePullConfig `json:"imagePullConfig,omitempty"`
+	ImagePullConfig ImagePullConfig `json:"imagePullConfig"`
 	StaticIP        bool            `json:"staticIP,omitempty"`
 	IngressLB       IngressLB       `json:"ingressLB,omitempty"`
 }
 
 type Disk struct {
-	Required  string `json:"required"`
+	Required  string `json:"required,omitempty"`
 	Ephemeral bool   `json:"ephemeral"`
 }
 
-type Volume struct {
+type CVolume struct {
 	Name          string `json:"name"`
 	MountPath     string `json:"mountPath"`
 	AccessMode    string `json:"accessMode,omitempty"`
@@ -113,16 +235,16 @@ type Volume struct {
 }
 
 type CResource struct {
-	Cpu     string   `json:"cpu,omitempty"`
-	Memory  string   `json:"memory,omitempty"`
-	Gpu     int      `json:"gpu,omitempty"`
-	Volumes []Volume `json:"volumes,omitempty"`
+	Cpu     string    `json:"cpu,omitempty"`
+	Memory  string    `json:"memory,omitempty"`
+	Gpu     int       `json:"gpu,omitempty"`
+	Volumes []CVolume `json:"volumes,omitempty"`
 }
 
-type EnvVar struct {
+type CEnvVar struct {
 	Name      string `json:"name"`
 	Value     string `json:"value"`
-	FromParam string `json:"fromParam"`
+	FromParam string `json:"fromParam,omitempty"`
 }
 
 type AppPort struct {
@@ -134,7 +256,7 @@ type AppPort struct {
 type ComponentContainer struct {
 	Name string `json:"name"`
 
-	Image string `json:"image,omitempty"`
+	Image string `json:"image"`
 
 	Command []string `json:"command,omitempty"`
 
@@ -142,7 +264,7 @@ type ComponentContainer struct {
 
 	Ports []AppPort `json:"ports,omitempty"`
 
-	Env []EnvVar `json:"env,omitempty"`
+	Env []CEnvVar `json:"env,omitempty"`
 
 	Resources CResource `json:"resources,omitempty"`
 
@@ -161,7 +283,7 @@ type WorkloadType string
 
 type Component struct {
 	Name       string      `json:"name"`
-	Version    string      `json:"version,omitempty"`
+	Version    string      `json:"version"`
 	Parameters []Parameter `json:"parameters,omitempty"`
 
 	WorkloadType WorkloadType `json:"workloadType"`
@@ -203,15 +325,15 @@ type WorkloadSetting struct {
 	FromParam string `json:"fromParam"`
 }
 
+type Handler struct {
+	Exec      ExecAction      `json:"exec,omitempty" protobuf:"bytes,1,opt,name=exec"`
+	HTTPGet   HTTPGetAction   `json:"httpGet,omitempty" protobuf:"bytes,2,opt,name=httpGet"`
+	TCPSocket TCPSocketAction `json:"tcpSocket,omitempty" protobuf:"bytes,3,opt,name=tcpSocket"`
+}
+
 type HealthProbe struct {
-	Exec    *ExecAction    `json:"exec,omitempty" protobuf:"bytes,1,opt,name=exec"`
-	HTTPGet *HTTPGetAction `json:"httpGet,omitempty" protobuf:"bytes,2,opt,name=httpGet"`
-	// TCPSocket specifies an action involving a TCP port.
-	// TCP hooks not yet supported
-	// TODO: implement a realistic TCP lifecycle hook
-	// +optional
-	TCPSocket           *TCPSocketAction `json:"tcpSocket,omitempty" protobuf:"bytes,3,opt,name=tcpSocket"`
-	InitialDelaySeconds int32            `json:"initialDelaySeconds,omitempty" protobuf:"varint,2,opt,name=initialDelaySeconds"`
+	Handler             `json:haneler",inline" protobuf:"bytes,1,opt,name=handler"`
+	InitialDelaySeconds int32 `json:"initialDelaySeconds,omitempty" protobuf:"varint,2,opt,name=initialDelaySeconds"`
 
 	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty" protobuf:"varint,3,opt,name=timeoutSeconds"`
 
@@ -274,178 +396,4 @@ type ComponentResources struct {
 	ServiceRole        string   `json:"serviceRole,omitempty"`
 	ServiceRoleBinding string   `json:"serviceRoleBinding,omitempty"`
 	DestinationRule    string   `json:"DestinationRule,omitempty"`
-}
-
-func (app *Application) Validation() error {
-	if app.Name == "" {
-		return fmt.Errorf("Please input application name.")
-	}
-	matched, err := regexp.MatchString(`^[a-z]([-a-z0-9]*[a-z0-9])?`, app.Name)
-	if err != nil {
-		return fmt.Errorf("Regexp application.name failed, ErrorInfo is %s", err)
-	}
-	if !matched {
-		return fmt.Errorf("Application name %s is invalid a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name',  or 'abc-123', regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?'", app.Name)
-	}
-	if _, ok := app.Labels["projectId"]; !ok {
-		return fmt.Errorf("projectId not in Application Labels,Please add it.")
-	}
-	if _, ok := app.Labels["applicationTemplateId"]; !ok {
-		return fmt.Errorf("applicationTemplateId not in Application Labels,Please add it.")
-	}
-	var componentname string
-	var componentversion map[string]int = make(map[string]int)
-	for _, com := range app.Spec.Components {
-		if com.Name == "" {
-			return fmt.Errorf("Component.name can't be empty")
-		}
-		matched, err := regexp.MatchString(`^[a-z]([-a-z0-9]*[a-z0-9])?`, com.Name)
-		if err != nil {
-			return fmt.Errorf("Regexp application.name failed, ErrorInfo is %s", err)
-		}
-		if !matched {
-			return fmt.Errorf("Component name %s is invalid a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name',  or 'abc-123', regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?'", com.Name)
-		}
-		if componentname == "" {
-			componentname = com.Name
-		} else {
-			if componentname != com.Name {
-				return fmt.Errorf("If the application has multiple components their names must be the same")
-			}
-		}
-		if !(com.WorkloadType == "Server") {
-			return fmt.Errorf("WorkloadType Need be Server.")
-		}
-		if com.Version == "" {
-			return fmt.Errorf("Please specify the version.")
-		}
-		if _, ok := componentversion[com.Version]; ok {
-			fmt.Errorf("The same component must have different versions")
-		} else {
-			componentversion[com.Version] = 1
-		}
-		for _, con := range com.Containers {
-			if con.Name == "" {
-				return fmt.Errorf("Please specify the %s's container name.", com.Name)
-			}
-			if len(con.Config) != 0 {
-				for _, v := range con.Config {
-					if v.Path == "" || v.Value == "" {
-						return fmt.Errorf("application.components.container.config's path and value can't be empty at the same time")
-					}
-					matched, err := regexp.MatchString(`^\/(\w+\/?)+$`, v.Path)
-					if err != nil {
-						return fmt.Errorf("Regexp application.components.containers.config.path's failed, ErrorInfo is %s", err)
-					}
-					if !matched {
-						return fmt.Errorf("application.components.containers.config.path's syntax is err")
-					}
-				}
-			}
-			if con.Image == "" {
-				return fmt.Errorf("Image can't be empty")
-			}
-			if len(con.Ports) != 0 {
-				for _, port := range con.Ports {
-					if port.ContainerPort <= 0 {
-						return fmt.Errorf("Please input correct ContainerPort.")
-					}
-				}
-			}
-			if !(reflect.DeepEqual(con.Resources, CResource{})) {
-				matched1, err1 := regexp.MatchString(`^[0-9]\d*[MG]i$`, con.Resources.Memory)
-				if err1 != nil {
-					return fmt.Errorf("Regexp application.components.containers.resources.memory failed, ErrorInfo is %s", err1)
-				}
-				if !matched1 {
-					return fmt.Errorf("application.components.containers.resources.memory's syntax is err")
-				}
-				matched2, err2 := regexp.MatchString(`^[0-9]\d*m$`, con.Resources.Cpu)
-				if err2 != nil {
-					return fmt.Errorf("Regexp application.components.containers.resources.cpu failed, ErrorInfo is %s", err2)
-				}
-				if !matched2 {
-					return fmt.Errorf("application.components.containers.resources.cpu's syntax is err")
-				}
-				/*if con.Resources.Gpu <= 0 {
-					return fmt.Errorf("Regexp application.components.containers.resources.gpu must be greater than 0")
-				}*/
-				if len(con.Resources.Volumes) != 0 {
-					for _, v := range con.Resources.Volumes {
-						if v.Name == "" || v.MountPath == "" {
-							return fmt.Errorf("application.components.container.resource.volumes's name and mountpath can't be empty at the same time")
-						}
-					}
-				}
-			}
-		}
-		if !(reflect.DeepEqual(com.DevTraits, ComponentTraitsForDev{})) {
-			if !(com.DevTraits.ImagePullConfig == ImagePullConfig{}) {
-				if com.DevTraits.ImagePullConfig.Registry == "" || com.DevTraits.ImagePullConfig.Password == "" || com.DevTraits.ImagePullConfig.Username == "" {
-					return fmt.Errorf("application.components.devtraits.imagepullconfig's username、password and registry can't be empty at the same time")
-				}
-			}
-			if !(com.DevTraits.IngressLB == IngressLB{}) {
-				if com.DevTraits.IngressLB.ConsistentType != "" && com.DevTraits.IngressLB.LBType != "" {
-					fmt.Errorf("You can only choose one of these two strategies")
-				}
-				if com.DevTraits.IngressLB.ConsistentType != "" && com.DevTraits.IngressLB.ConsistentType != "sourceIP" {
-					fmt.Errorf("application.components.devtraits.ingresslb.consistentType only support sourceIP")
-				}
-				if com.DevTraits.IngressLB.LBType != "" && !(com.DevTraits.IngressLB.LBType == "rr" || com.DevTraits.IngressLB.LBType == "leastConn" || com.DevTraits.IngressLB.LBType == "random") {
-					fmt.Errorf("application.components.devtraits.ingresslb.LBType only support rr leastConn random")
-				}
-			}
-		}
-		if (reflect.DeepEqual(com.OptTraits, ComponentTraitsForOpt{})) {
-			return fmt.Errorf("application.components.opttraits.ingress must be configured")
-		} else {
-			if (com.OptTraits.Ingress == AppIngress{}) {
-				return fmt.Errorf("application.components.opttraits.ingress must be configured")
-			} else {
-				if com.OptTraits.Ingress.Host == "" || com.OptTraits.Ingress.Path == "" || com.OptTraits.Ingress.ServerPort <= 0 {
-					return fmt.Errorf("application.components.opttraits.ingress's host、path and serverPort can't be empty at the same time")
-				} else {
-					//matched, err := regexp.MatchString(`^\/(\w+\/?)+$`, com.OptTraits.Ingress.Path)
-					if com.OptTraits.Ingress.Path != "/" {
-						//return fmt.Errorf("Regexp application.components.opttraits.ingress's failed, ErrorInfo is %s", err)
-						return fmt.Errorf("application.components.opttraits.ingress's path must be /")
-					}
-				}
-			}
-			if (com.OptTraits.ManualScaler == ManualScaler{}) {
-				return fmt.Errorf("component.opttraits.manualscaler field cannot be empty")
-			} else {
-				if com.OptTraits.ManualScaler.Replicas <= 0 {
-					return fmt.Errorf("component.opttraits.manualscaler.replicas must be greater than 0")
-				}
-			}
-			if !(reflect.DeepEqual(com.OptTraits.RateLimit, RateLimit{})) {
-				if com.OptTraits.RateLimit.TimeDuration == "" || com.OptTraits.RateLimit.RequestAmount <= 0 {
-					return fmt.Errorf("application.components.opttraits.ratelimit.timeduration and requestamount can't be empty at the same time")
-				}
-				if len(com.OptTraits.RateLimit.Overrides) != 0 {
-					for _, i := range com.OptTraits.RateLimit.Overrides {
-						if i.RequestAmount <= 0 || i.User == "" {
-							return fmt.Errorf("application.components.opttraits.ratelimit.overrides.user and requestamount can't be empty at the same time")
-						}
-					}
-				}
-			}
-			if len(com.OptTraits.WhiteList.Users) != 0 {
-				for _, i := range com.OptTraits.WhiteList.Users {
-					matched, err := regexp.MatchString(`^.*@.*$`, i)
-					if err != nil {
-						return fmt.Errorf("Regexp application.components.opttraits.whitelist.users %s failed, ErrorInfo is %s", i, err)
-					}
-					if matched {
-						continue
-					} else {
-						return fmt.Errorf("Regexp application.components.opttraits.whitelist.users %s failed", i)
-					}
-				}
-			}
-		}
-	}
-	return nil
 }
