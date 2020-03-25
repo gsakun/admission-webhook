@@ -186,7 +186,7 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 	allowed := true
 	var result *metav1.Status
 	if req.Kind.Kind == "Pod" {
-		glog.Infoln(string(req.Object.Raw))
+		glog.Infoln(req.Object)
 	}
 	if req.Kind.Kind == "Application" {
 		var application Application
