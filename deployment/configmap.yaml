@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sidecar-injector-webhook-configmap
+  namespace: kube-system
+data:
+  sidecarconfig.yaml: |
+    containers:
+    - name: sidecar-nginx
+      image: socp.io/zk/sidecar:0407
+      imagePullPolicy: IfNotPresent
