@@ -58,6 +58,7 @@ const (
 	admissionWebhookAnnotationValidateKey = "admission-webhook-example.qikqiak.com/validate"
 	admissionWebhookAnnotationMutateKey   = "admission-webhook-example.qikqiak.com/mutate"
 	admissionWebhookAnnotationStatusKey   = "admission-webhook-example.qikqiak.com/status"
+	admissionWebhookAnnotationPodNoCreate = "admission-webhook-example.qikqiak.com/podnocreate"
 
 	nameLabel      = "app.kubernetes.io/name"
 	instanceLabel  = "app.kubernetes.io/instance"
@@ -129,6 +130,10 @@ func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 	status := annotations[admissionWebhookAnnotationStatusKey]
 
 	if strings.ToLower(status) == "injected" {
+		required = false
+	}
+
+	if annotations[admissionWebhookAnnotationPodNoCreate] == "yes" {
 		required = false
 	}
 
@@ -252,9 +257,15 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 				Allowed: true,
 			}
 		}
-		applyDefaultsWorkaround(whsvr.sidecarConfig.Containers)
-		annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
-		patchBytes, err := createPodPatch(&pod, whsvr.sidecarConfig, annotations)
+		if len(pod.Annotations) == 0 {
+			pod.Annotations = map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
+		} else {
+			pod.Annotations[admissionWebhookAnnotationStatusKey] = "injected"
+		}
+
+		//applyDefaultsWorkaround(whsvr.sidecarConfig.Containers)
+		//annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
+		/*patchBytes, err := createPodPatch(&pod, whsvr.sidecarConfig, annotations)
 		if err != nil {
 			return &v1beta1.AdmissionResponse{
 				Result: &metav1.Status{
@@ -271,7 +282,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 				pt := v1beta1.PatchTypeJSONPatch
 				return &pt
 			}(),
-		}
+		}*/
 		//podavailableLabels = deployment.Spec.Template.Labels
 		/*case "Service":
 		var service corev1.Service
