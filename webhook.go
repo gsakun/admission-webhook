@@ -187,8 +187,8 @@ func createPatch(availableAnnotations map[string]string, annotations map[string]
 // validate deployments and services
 func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
-	glog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v",
-		req.Kind, req.Namespace, req.Name)
+	glog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v patchOperation=%v",
+		req.Kind, req.Namespace, req.Name, req.Operation)
 	allowed := true
 	var result *metav1.Status
 	if req.Kind.Kind == "Application" {
