@@ -132,11 +132,6 @@ func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 	if strings.ToLower(status) == "injected" {
 		required = false
 	}
-
-	if annotations[admissionWebhookAnnotationPodNoCreate] == "yes" {
-		required = false
-	}
-
 	glog.Infof("Mutation policy for %v/%v: required:%v", metadata.Namespace, metadata.Name, required)
 	return required
 }
@@ -216,6 +211,26 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 			}
 		}
 	}
+
+	if req.Kind.Kind == "Pod" {
+		var pod corev1.Pod
+		if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
+			glog.Errorf("Could not unmarshal raw object: %v", err)
+			return &v1beta1.AdmissionResponse{
+				Result: &metav1.Status{
+					Message: err.Error(),
+				},
+			}
+		}
+		glog.Infoln(pod)
+		if pod.Annotations[admissionWebhookAnnotationPodNoCreate] == "yes" {
+			allowed = false
+			result = &metav1.Status{
+				Reason: "This pod's deployment is deleting specfic pod",
+			}
+		}
+	}
+
 	return &v1beta1.AdmissionResponse{
 		Allowed: allowed,
 		Result:  result,
