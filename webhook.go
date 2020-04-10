@@ -241,8 +241,8 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 				},
 			}
 		}
-		rsclient := clientset.AppsV1().ReplicaSets("test-ns")
-		list, err := rsclient.List(metav1.ListOptions{})
+		deployclient := clientset.AppsV1().Deployments("test-ns")
+		list, err := deployclient.List(metav1.ListOptions{})
 		if err != nil {
 			return &v1beta1.AdmissionResponse{
 				Result: &metav1.Status{
@@ -250,9 +250,9 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 				},
 			}
 		}
-		for _, rs := range list.Items {
-			if strings.Contains(pod.Name, rs.Name) {
-				if rs.Annotations["delete"] == "yes" {
+		for _, deploy := range list.Items {
+			if strings.Contains(pod.Name, deploy.Name) {
+				if deploy.Annotations["delete"] == "yes" {
 					allowed = false
 					result = &metav1.Status{
 						Reason: "This pod's deployment is deleting specfic pod",

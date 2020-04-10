@@ -5,6 +5,10 @@ go 1.13
 require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/google/btree v1.0.0 // indirect
+	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
+	github.com/kr/pretty v0.2.0 // indirect
+	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/rancher/norman v0.0.0-20191209163739-5b9227fe3222
 	github.com/sirupsen/logrus v1.4.2
 	k8s.io/api v0.17.2
