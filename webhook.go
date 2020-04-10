@@ -252,9 +252,11 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 		}
 		for _, rs := range list.Items {
 			if strings.Contains(pod.Name, rs.Name) {
-				allowed = false
-				result = &metav1.Status{
-					Reason: "This pod's deployment is deleting specfic pod",
+				if rs.Annotations["delete"] == "yes" {
+					allowed = false
+					result = &metav1.Status{
+						Reason: "This pod's deployment is deleting specfic pod",
+					}
 				}
 			}
 		}
