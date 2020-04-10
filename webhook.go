@@ -16,6 +16,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 var (
@@ -223,12 +225,45 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 			}
 		}
 		glog.Infoln(pod)
-		if pod.Annotations[admissionWebhookAnnotationPodNoCreate] == "yes" {
-			allowed = false
-			result = &metav1.Status{
-				Reason: "This pod's deployment is deleting specfic pod",
+		restConfig, err := rest.InClusterConfig()
+		if err != nil {
+			return &v1beta1.AdmissionResponse{
+				Result: &metav1.Status{
+					Message: err.Error(),
+				},
 			}
 		}
+		clientset, err := kubernetes.NewForConfig(restConfig)
+		if err != nil {
+			return &v1beta1.AdmissionResponse{
+				Result: &metav1.Status{
+					Message: err.Error(),
+				},
+			}
+		}
+		rsclient := clientset.AppsV1().ReplicaSets("test-ns")
+		list, err := rsclient.List(metav1.ListOptions{})
+		if err != nil {
+			return &v1beta1.AdmissionResponse{
+				Result: &metav1.Status{
+					Message: err.Error(),
+				},
+			}
+		}
+		for _, rs := range list.Items {
+			if strings.Contains(pod.Name, rs.Name) {
+				allowed = false
+				result = &metav1.Status{
+					Reason: "This pod's deployment is deleting specfic pod",
+				}
+			}
+		}
+		/*		if pod.Annotations[admissionWebhookAnnotationPodNoCreate] == "yes" {
+				allowed = false
+				result = &metav1.Status{
+					Reason: "This pod's deployment is deleting specfic pod",
+				}
+			}*/
 	}
 
 	return &v1beta1.AdmissionResponse{
