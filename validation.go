@@ -140,21 +140,23 @@ func (app *Application) Validation() error {
 					if !reflect.DeepEqual(con.LivenessProbe.TCPSocket, TCPSocketAction{}) {
 						return fmt.Errorf("Exec has been configured in livenessProbe,The other options cannot be selected")
 					}
-				}
-				if !reflect.DeepEqual(con.LivenessProbe.HTTPGet, HTTPGetAction{}) {
-					if con.LivenessProbe.HTTPGet.Port <= 0 || con.LivenessProbe.HTTPGet.Path == "" {
-						return fmt.Errorf("Please check application.components.containers.livenessProbe's httpget field")
-					}
-					if !reflect.DeepEqual(con.LivenessProbe.TCPSocket, TCPSocketAction{}) {
-						return fmt.Errorf("HttpGet has been configured in livenessProbe,The other options cannot be selected")
-					}
-				}
-				if !reflect.DeepEqual(con.LivenessProbe.TCPSocket, TCPSocketAction{}) {
-					if con.LivenessProbe.TCPSocket.Port <= 0 {
-						return fmt.Errorf("Please check application.components.containers.livenessProbe's Tcpsocket field")
-					}
 				} else {
-					return fmt.Errorf("LivenessProbe's exec httpget tcpsocket are not configured,please unset livenessprobe field.")
+					if !reflect.DeepEqual(con.LivenessProbe.HTTPGet, HTTPGetAction{}) {
+						if con.LivenessProbe.HTTPGet.Port <= 0 || con.LivenessProbe.HTTPGet.Path == "" {
+							return fmt.Errorf("Please check application.components.containers.livenessProbe's httpget field")
+						}
+						if !reflect.DeepEqual(con.LivenessProbe.TCPSocket, TCPSocketAction{}) {
+							return fmt.Errorf("HttpGet has been configured in livenessProbe,The other options cannot be selected")
+						}
+					} else {
+						if !reflect.DeepEqual(con.LivenessProbe.TCPSocket, TCPSocketAction{}) {
+							if con.LivenessProbe.TCPSocket.Port <= 0 {
+								return fmt.Errorf("Please check application.components.containers.livenessProbe's Tcpsocket field")
+							}
+						} else {
+							return fmt.Errorf("LivenessProbe's exec httpget tcpsocket are not configured,please unset livenessprobe field.")
+						}
+					}
 				}
 				if con.LivenessProbe.InitialDelaySeconds <= 0 || con.LivenessProbe.PeriodSeconds <= 0 || con.LivenessProbe.SuccessThreshold <= 0 || con.LivenessProbe.FailureThreshold <= 0 {
 					return fmt.Errorf("LivenessProbe's InitialDelaySeconds PeriodSeconds SuccessThreshold FailureThreshold can't <= 0")
@@ -169,23 +171,25 @@ func (app *Application) Validation() error {
 						return fmt.Errorf("Exec has been configured in ReadinessProbe,The other options cannot be selected")
 					}
 					if !reflect.DeepEqual(con.ReadinessProbe.TCPSocket, TCPSocketAction{}) {
-						return fmt.Errorf("tcpsocket has been configured in ReadinessProbe,The other options cannot be selected")
-					}
-				}
-				if !reflect.DeepEqual(con.ReadinessProbe.HTTPGet, HTTPGetAction{}) {
-					if con.ReadinessProbe.HTTPGet.Port <= 0 || con.ReadinessProbe.HTTPGet.Path == "" {
-						return fmt.Errorf("Please check application.components.containers.ReadinessProbe's httpget field")
-					}
-					if !reflect.DeepEqual(con.ReadinessProbe.TCPSocket, TCPSocketAction{}) {
-						return fmt.Errorf("tcpsocket has been configured in ReadinessProbe,The other options cannot be selected")
-					}
-				}
-				if !reflect.DeepEqual(con.ReadinessProbe.TCPSocket, TCPSocketAction{}) {
-					if con.ReadinessProbe.TCPSocket.Port <= 0 {
-						return fmt.Errorf("Please check application.components.containers.ReadinessProbe's Tcpsocket field")
+						return fmt.Errorf("Exec has been configured in ReadinessProbe,The other options cannot be selected")
 					}
 				} else {
-					return fmt.Errorf("ReadinessProbe's exec httpget tcpsocket are not configured,please unset ReadinessProbe field.")
+					if !reflect.DeepEqual(con.ReadinessProbe.HTTPGet, HTTPGetAction{}) {
+						if con.ReadinessProbe.HTTPGet.Port <= 0 || con.ReadinessProbe.HTTPGet.Path == "" {
+							return fmt.Errorf("Please check application.components.containers.ReadinessProbe's httpget field")
+						}
+						if !reflect.DeepEqual(con.ReadinessProbe.TCPSocket, TCPSocketAction{}) {
+							return fmt.Errorf("HttpGet has been configured in ReadinessProbe,The other options cannot be selected")
+						}
+					} else {
+						if !reflect.DeepEqual(con.ReadinessProbe.TCPSocket, TCPSocketAction{}) {
+							if con.ReadinessProbe.TCPSocket.Port <= 0 {
+								return fmt.Errorf("Please check application.components.containers.ReadinessProbe's Tcpsocket field")
+							}
+						} else {
+							return fmt.Errorf("ReadinessProbe's exec httpget tcpsocket are not configured,please unset ReadinessProbe field.")
+						}
+					}
 				}
 				if con.ReadinessProbe.InitialDelaySeconds <= 0 || con.ReadinessProbe.PeriodSeconds <= 0 || con.ReadinessProbe.SuccessThreshold <= 0 || con.ReadinessProbe.FailureThreshold <= 0 {
 					return fmt.Errorf("ReadinessProbe's InitialDelaySeconds PeriodSeconds SuccessThreshold FailureThreshold can't <= 0")
