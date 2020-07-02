@@ -138,7 +138,7 @@ func (app *Application) Validation() error {
 						return fmt.Errorf("Exec has been configured in livenessProbe,The other options cannot be selected")
 					}
 					if !reflect.DeepEqual(con.LivenessProbe.TCPSocket, TCPSocketAction{}) {
-						return fmt.Errorf("tcpsocket has been configured in livenessProbe,The other options cannot be selected")
+						return fmt.Errorf("Exec has been configured in livenessProbe,The other options cannot be selected")
 					}
 				}
 				if !reflect.DeepEqual(con.LivenessProbe.HTTPGet, HTTPGetAction{}) {
@@ -146,7 +146,7 @@ func (app *Application) Validation() error {
 						return fmt.Errorf("Please check application.components.containers.livenessProbe's httpget field")
 					}
 					if !reflect.DeepEqual(con.LivenessProbe.TCPSocket, TCPSocketAction{}) {
-						return fmt.Errorf("tcpsocket has been configured in livenessProbe,The other options cannot be selected")
+						return fmt.Errorf("HttpGet has been configured in livenessProbe,The other options cannot be selected")
 					}
 				}
 				if !reflect.DeepEqual(con.LivenessProbe.TCPSocket, TCPSocketAction{}) {
@@ -154,7 +154,7 @@ func (app *Application) Validation() error {
 						return fmt.Errorf("Please check application.components.containers.livenessProbe's Tcpsocket field")
 					}
 				} else {
-					fmt.Errorf("LivenessProbe's exec httpget tcpsocket are not configured,please unset livenessprobe field.")
+					return fmt.Errorf("LivenessProbe's exec httpget tcpsocket are not configured,please unset livenessprobe field.")
 				}
 				if con.LivenessProbe.InitialDelaySeconds <= 0 || con.LivenessProbe.PeriodSeconds <= 0 || con.LivenessProbe.SuccessThreshold <= 0 || con.LivenessProbe.FailureThreshold <= 0 {
 					return fmt.Errorf("LivenessProbe's InitialDelaySeconds PeriodSeconds SuccessThreshold FailureThreshold can't <= 0")
@@ -185,7 +185,7 @@ func (app *Application) Validation() error {
 						return fmt.Errorf("Please check application.components.containers.ReadinessProbe's Tcpsocket field")
 					}
 				} else {
-					fmt.Errorf("ReadinessProbe's exec httpget tcpsocket are not configured,please unset ReadinessProbe field.")
+					return fmt.Errorf("ReadinessProbe's exec httpget tcpsocket are not configured,please unset ReadinessProbe field.")
 				}
 				if con.ReadinessProbe.InitialDelaySeconds <= 0 || con.ReadinessProbe.PeriodSeconds <= 0 || con.ReadinessProbe.SuccessThreshold <= 0 || con.ReadinessProbe.FailureThreshold <= 0 {
 					return fmt.Errorf("ReadinessProbe's InitialDelaySeconds PeriodSeconds SuccessThreshold FailureThreshold can't <= 0")
