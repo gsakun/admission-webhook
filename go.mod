@@ -18,6 +18,7 @@ require (
 )
 
 replace (
+	github.com/hd-Li/types => github.com/gsakun/types v0.0.0-20200612144151-977065b44fda
 	k8s.io/api => k8s.io/api v0.0.0-20181004124137-fd83cbc87e76
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20181004124836-1748dfb29e8a
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20180913025736-6dd46049f395

@@ -23,6 +23,11 @@ const (
 	SingletonTask   WorkloadType = "SingletonTaskTask"
 )
 
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// Application is a specification for a Application resource
+
 type Application struct {
 	types.Namespaced
 	metav1.TypeMeta   `json:",inline"`
@@ -34,6 +39,8 @@ type Application struct {
 
 type ApplicationSpec struct {
 	Components []Component `json:"components"`
+	//DevTraits  ComponentTraitsForDev `json:"devTraits,omitempty"`
+	OptTraits ComponentTraitsForOpt `json:"optTraits,omitempty"`
 }
 
 type WhiteList struct {
@@ -51,24 +58,41 @@ type VolumeMounter struct {
 	StorageClass string `json:"storageClass"`
 }
 
-type ManualScaler struct {
-	Replicas int32 `json:"replicas"`
+type ComponentTraitsForOpt struct {
+	LoadBalancer    LoadBalancerSettings `json:"loadBalancer,omitempty"`
+	GrayRelease     map[string]int       `json:"grayRelease,omitempty"`
+	ImagePullConfig ImagePullConfig      `json:"imagePullConfig,omitempty"`
+	StaticIP        bool                 `json:"staticIP,omitempty"`
+	VolumeMounter   VolumeMounter        `json:"volumeMounter,omitempty"`
+	Ingress         AppIngress           `json:"ingress"`
+	WhiteList       WhiteList            `json:"whiteList,omitempty"`
+	Eject           []string             `json:"eject,omitempty"`
+	Fusing          Fusing               `json:"fusing,omitempty"` //zk
+	RateLimit       RateLimit            `json:"rateLimit,omitempty"`
+	CircuitBreaking CircuitBreaking      `json:"circuitbreaking,omitempty"` //zk
+	HTTPRetry       HTTPRetry            `json:"httpretry,omitempty"`
 }
 
-type ComponentTraitsForOpt struct {
-	ManualScaler    ManualScaler    `json:"manualScaler,omitempty"`
-	VolumeMounter   VolumeMounter   `json:"volumeMounter,omitempty"`
-	Ingress         AppIngress      `json:"ingress"`
-	WhiteList       WhiteList       `json:"whiteList,omitempty"`
-	Eject           []string        `json:"eject,omitempty"`
-	Fusing          Fusing          `json:"fusing,omitempty"` //zk
-	RateLimit       RateLimit       `json:"rateLimit,omitempty"`
-	CircuitBreaking CircuitBreaking `json:"circuitbreaking,omitempty"` //zk
+//zk
+type CustomMetric struct {
+	Enable bool   `json: "enable"`
+	Uri    string `json:"uri,omitempty"`
+}
+
+type Autoscaling struct {
+	Metric      string `json:"metric"`
+	Threshold   int32  `json:"threshold"`
+	MaxReplicas int32  `json:"maxreplicas"`
+	MinReplicas int32  `json:"minreplicas"`
+}
+
+type HTTPRetry struct {
+	Attempts      int    `json:"attempts"`
+	PerTryTimeout string `json: "perTryTimeout"`
 }
 
 //zk
 type CircuitBreaking struct {
-	LoadBalancer      LoadBalancerSettings   `json:"loadBalancer,omitempty"`
 	ConnectionPool    ConnectionPoolSettings `json:"connectionPool,omitempty"`
 	OutlierDetection  OutlierDetection       `json:"outlierDetection,omitempty"`
 	PortLevelSettings []PortTrafficPolicy    `json:"portLevelSettings,omitempty"`
@@ -94,76 +118,33 @@ type PortSelector struct {
 }
 
 type OutlierDetection struct {
-	// Number of errors before a host is ejected from the connection
-	// pool. Defaults to 5. When the upstream host is accessed over HTTP, a
-	// 5xx return code qualifies as an error. When the upstream host is
-	// accessed over an opaque TCP connection, connect timeouts and
-	// connection error/failure events qualify as an error.
-	ConsecutiveErrors int32 `json:"consecutiveErrors,omitempty"`
-
-	// Time interval between ejection sweep analysis. format:
-	// 1h/1m/1s/1ms. MUST BE >=1ms. Default is 10s.
-	Interval string `json:"interval,omitempty"`
-
-	// Minimum ejection duration. A host will remain ejected for a period
-	// equal to the product of minimum ejection duration and the number of
-	// times the host has been ejected. This technique allows the system to
-	// automatically increase the ejection period for unhealthy upstream
-	// servers. format: 1h/1m/1s/1ms. MUST BE >=1ms. Default is 30s.
-	BaseEjectionTime string `json:"baseEjectionTime,omitempty"`
-
-	// Maximum % of hosts in the load balancing pool for the upstream
-	// service that can be ejected. Defaults to 10%.
-	MaxEjectionPercent int32 `json:"maxEjectionPercent,omitempty"`
+	ConsecutiveErrors  int32  `json:"consecutiveErrors,omitempty"`
+	Interval           string `json:"interval,omitempty"`
+	BaseEjectionTime   string `json:"baseEjectionTime,omitempty"`
+	MaxEjectionPercent int32  `json:"maxEjectionPercent,omitempty"`
 }
 
 // Settings common to both HTTP and TCP upstream connections.
 type TCPSettings struct {
-	// Maximum number of HTTP1 /TCP connections to a destination host.
 	MaxConnections int32 `json:"maxConnections,omitempty"`
 
-	// TCP connection timeout.
 	ConnectTimeout string `json:"connectTimeout,omitempty"`
 }
 
 // Settings applicable to HTTP1.1/HTTP2/GRPC connections.
 type HTTPSettings struct {
-	// Maximum number of pending HTTP requests to a destination. Default 1024.
-	HTTP1MaxPendingRequests int32 `json:"http1MaxPendingRequests,omitempty"`
-
-	// Maximum number of requests to a backend. Default 1024.
-	HTTP2MaxRequests int32 `json:"http2MaxRequests,omitempty"`
-
-	// Maximum number of requests per connection to a backend. Setting this
-	// parameter to 1 disables keep alive.
+	HTTP1MaxPendingRequests  int32 `json:"http1MaxPendingRequests,omitempty"`
+	HTTP2MaxRequests         int32 `json:"http2MaxRequests,omitempty"`
 	MaxRequestsPerConnection int32 `json:"maxRequestsPerConnection,omitempty"`
-
-	// Maximum number of retries that can be outstanding to all hosts in a
-	// cluster at a given time. Defaults to 3.
-	MaxRetries int32 `json:"maxRetries,omitempty"`
+	MaxRetries               int32 `json:"maxRetries,omitempty"`
 }
 
 type SimpleLB string
 
 const (
-	// Round Robin policy. Default
-	SimpleLBRoundRobin SimpleLB = "ROUND_ROBIN"
-
-	// The least request load balancer uses an O(1) algorithm which selects
-	// two random healthy hosts and picks the host which has fewer active
-	// requests.
-	SimpleLBLeastConn SimpleLB = "LEAST_CONN"
-
-	// The random load balancer selects a random healthy host. The random
-	// load balancer generally performs better than round robin if no health
-	// checking policy is configured.
-	SimpleLBRandom SimpleLB = "RANDOM"
-
-	// This option will forward the connection to the original IP address
-	// requested by the caller without doing any form of load
-	// balancing. This option must be used with care. It is meant for
-	// advanced use cases. Refer to Original Destination load balancer in
-	// Envoy for further details.
+	SimpleLBRoundRobin  SimpleLB = "ROUND_ROBIN"
+	SimpleLBLeastConn   SimpleLB = "LEAST_CONN"
+	SimpleLBRandom      SimpleLB = "RANDOM"
 	SimpleLBPassthrough SimpleLB = "PASSTHROUGH"
 )
 
@@ -215,10 +196,13 @@ type ImagePullConfig struct {
 	Password string `json:"password,omitempty"`
 }
 
-type ComponentTraitsForDev struct {
-	ImagePullConfig ImagePullConfig `json:"imagePullConfig"`
-	StaticIP        bool            `json:"staticIP,omitempty"`
-	IngressLB       IngressLB       `json:"ingressLB,omitempty"`
+type ComponentTraits struct {
+	Replicas                      int32          `json:"replicas"`
+	CustomMetric                  CustomMetric   `json:"custommetric,omitempty"` //zk
+	Logcollect                    bool           `json:"logcollect,,omitempty"`
+	TerminationGracePeriodSeconds int64          `json:"terminationGracePeriodSeconds,omitempty"` //zk
+	SchedulePolicy                SchedulePolicy `json:"schedulePolicy,omitempty"`
+	Autoscaling                   Autoscaling    `json:"autoscaling,omitempty"` //zk
 }
 
 type Disk struct {
@@ -272,32 +256,71 @@ type ComponentContainer struct {
 
 	ReadinessProbe HealthProbe `json:"readinessProbe,omitempty"`
 
-	ImagePullPolicy PullPolicy `json:"imagePullPolicy,omitempty"`
-
+	ImagePullPolicy PullPolicy       `json:"imagePullPolicy,omitempty"`
+	Lifecycle       CLifecycle       `json:"lifecycle,omitempty"`
 	Config          []ConfigFile     `json:"config,omitempty"`
 	ImagePullSecret string           `json:"imagePullSecret,omitempty"`
 	SecurityContext *SecurityContext `json:"securityContext,omitempty"`
 }
 
+type SchedulePolicy struct {
+	NodeSelector    map[string]string `json:"nodeSelector,omitempty"`
+	NodeAffinity    CNodeAffinity     `json:"nodeAffinity,omitempty"`
+	PodAffinity     CPodAffinity      `json:"podAffinity,omitempty"`
+	PodAntiAffinity CPodAntiAffinity  `json:"podAntiAffinity,omitempty"`
+}
+
+type CPodAntiAffinity struct {
+	HardAffinity              bool `json:"hardAffinity,omitempty"`
+	CLabelSelectorRequirement `json:"labelSelectorRequirement,omitempty"`
+}
+
+type CPodAffinity struct {
+	HardAffinity              bool `json:"hardAffinity,omitempty"`
+	CLabelSelectorRequirement `json:"labelSelectorRequirement,omitempty"`
+}
+
+type CNodeAffinity struct {
+	HardAffinity              bool `json:"hardAffinity,omitempty"`
+	CLabelSelectorRequirement `json:"labelSelectorRequirement,omitempty"`
+}
+
+type CLabelSelectorRequirement struct {
+	Key      string                 `json:"key" patchStrategy:"merge" patchMergeKey:"key" protobuf:"bytes,1,opt,name=key"`
+	Operator CLabelSelectorOperator `json:"operator" protobuf:"bytes,2,opt,name=operator,casttype=LabelSelectorOperator"`
+	Values   []string               `json:"values,omitempty" protobuf:"bytes,3,rep,name=values"`
+}
+
+// A label selector operator is the set of operators that can be used in a selector requirement.
+type CLabelSelectorOperator string
+
+const (
+	LabelSelectorOpIn           CLabelSelectorOperator = "In"
+	LabelSelectorOpNotIn        CLabelSelectorOperator = "NotIn"
+	LabelSelectorOpExists       CLabelSelectorOperator = "Exists"
+	LabelSelectorOpDoesNotExist CLabelSelectorOperator = "DoesNotExist"
+)
+
+type CLifecycle struct {
+	PostStart *Handler `json:"postStart,omitempty" protobuf:"bytes,1,opt,name=postStart"`
+	PreStop   *Handler `json:"preStop,omitempty" protobuf:"bytes,2,opt,name=preStop"`
+}
+
 type WorkloadType string
 
 type Component struct {
-	Name       string      `json:"name"`
-	Version    string      `json:"version"`
-	Parameters []Parameter `json:"parameters,omitempty"`
-
+	Name         string       `json:"name"`
+	Version      string       `json:"version"`
+	Parameters   []Parameter  `json:"parameters,omitempty"`
 	WorkloadType WorkloadType `json:"workloadType"`
 
 	OsType string `json:"osType,omitempty"`
 
 	Arch string `json:"arch,omitempty"`
 
-	Containers []ComponentContainer `json:"containers,omitempty"`
-
-	WorkloadSettings []WorkloadSetting `json:"workloadSetings,omitempty"`
-
-	DevTraits ComponentTraitsForDev `json:"devTraits,omitempty"`
-	OptTraits ComponentTraitsForOpt `json:"optTraits,omitempty"`
+	Containers       []ComponentContainer `json:"containers,omitempty"`
+	ComponentTraits  ComponentTraits      `json:"componentTraits,omitempty"`
+	WorkloadSettings []WorkloadSetting    `json:"workloadSetings,omitempty"`
 }
 
 //int,float,string,bool,json
