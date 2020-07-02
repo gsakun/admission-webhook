@@ -70,7 +70,7 @@ func (app *Application) Validation() error {
 						return fmt.Errorf("env.value and env.fromparam cannot be configured at the same time")
 					}
 
-					if env.FromParam != "" && (env.FromParam == "spec.nodeName" || env.FromParam == "metadata.name" || env.FromParam == "metadata.namespace" || env.FromParam == "status.podIP") {
+					if env.FromParam != "" && !(env.FromParam == "spec.nodeName" || env.FromParam == "metadata.name" || env.FromParam == "metadata.namespace" || env.FromParam == "status.podIP") {
 						return fmt.Errorf("Only these fields are allowed to be populated fromparam(spec.nodeName,metadata.name,metadata.namespace,status.podIP)")
 					}
 
