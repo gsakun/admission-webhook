@@ -349,9 +349,9 @@ type WorkloadSetting struct {
 }
 
 type Handler struct {
-	Exec      ExecAction      `json:"exec,omitempty" protobuf:"bytes,1,opt,name=exec"`
-	HTTPGet   HTTPGetAction   `json:"httpGet,omitempty" protobuf:"bytes,2,opt,name=httpGet"`
-	TCPSocket TCPSocketAction `json:"tcpSocket,omitempty" protobuf:"bytes,3,opt,name=tcpSocket"`
+	Exec      *ExecAction      `json:"exec,omitempty" protobuf:"bytes,1,opt,name=exec"`
+	HTTPGet   *HTTPGetAction   `json:"httpGet,omitempty" protobuf:"bytes,2,opt,name=httpGet"`
+	TCPSocket *TCPSocketAction `json:"tcpSocket,omitempty" protobuf:"bytes,3,opt,name=tcpSocket"`
 }
 
 type HealthProbe struct {

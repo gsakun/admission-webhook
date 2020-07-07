@@ -134,26 +134,26 @@ func (app *Application) Validation() error {
 			}
 			//if !reflect.DeepEqual(con.LivenessProbe, HealthProbe{}) {
 			if con.LivenessProbe != nil {
-				if !reflect.DeepEqual(con.LivenessProbe.Exec, ExecAction{}) {
+				if con.LivenessProbe.Exec != nil {
 					if len(con.LivenessProbe.Exec.Command) == 0 {
 						return fmt.Errorf("If Exec option has configured,command can't be null")
 					}
-					if !reflect.DeepEqual(con.LivenessProbe.HTTPGet, HTTPGetAction{}) {
+					if con.LivenessProbe.HTTPGet != nil {
 						return fmt.Errorf("Exec has been configured in livenessProbe,The other options cannot be selected")
 					}
-					if !reflect.DeepEqual(con.LivenessProbe.TCPSocket, TCPSocketAction{}) {
+					if con.LivenessProbe.TCPSocket != nil {
 						return fmt.Errorf("Exec has been configured in livenessProbe,The other options cannot be selected")
 					}
 				} else {
-					if !reflect.DeepEqual(con.LivenessProbe.HTTPGet, HTTPGetAction{}) {
+					if con.LivenessProbe.HTTPGet != nil {
 						if con.LivenessProbe.HTTPGet.Port <= 0 || con.LivenessProbe.HTTPGet.Path == "" {
 							return fmt.Errorf("Please check application.components.containers.livenessProbe's httpget field")
 						}
-						if !reflect.DeepEqual(con.LivenessProbe.TCPSocket, TCPSocketAction{}) {
+						if con.LivenessProbe.TCPSocket != nil {
 							return fmt.Errorf("HttpGet has been configured in livenessProbe,The other options cannot be selected")
 						}
 					} else {
-						if !reflect.DeepEqual(con.LivenessProbe.TCPSocket, TCPSocketAction{}) {
+						if con.LivenessProbe.TCPSocket != nil {
 							if con.LivenessProbe.TCPSocket.Port <= 0 {
 								return fmt.Errorf("Please check application.components.containers.livenessProbe's Tcpsocket field")
 							}
