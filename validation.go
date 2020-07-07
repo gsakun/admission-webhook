@@ -281,9 +281,12 @@ func (app *Application) Validation() error {
 				return fmt.Errorf("application.opttraits.httpretry.pertrytimeout must end with s or m")
 			}
 		}
-		if !(reflect.DeepEqual(app.Spec.OptTraits.CircuitBreaking, CircuitBreaking{})) {
-			if !reflect.DeepEqual(app.Spec.OptTraits.CircuitBreaking.ConnectionPool, ConnectionPoolSettings{}) {
-				if !reflect.DeepEqual(app.Spec.OptTraits.CircuitBreaking.ConnectionPool.TCP, TCPSettings{}) {
+		//if !(reflect.DeepEqual(app.Spec.OptTraits.CircuitBreaking, CircuitBreaking{})) {
+		if app.Spec.OptTraits.CircuitBreaking != nil {
+			//if !reflect.DeepEqual(app.Spec.OptTraits.CircuitBreaking.ConnectionPool, ConnectionPoolSettings{}) {
+			if app.Spec.OptTraits.CircuitBreaking.ConnectionPool != nil {
+				//if !reflect.DeepEqual(app.Spec.OptTraits.CircuitBreaking.ConnectionPool.TCP, TCPSettings{}) {
+				if app.Spec.OptTraits.CircuitBreaking.ConnectionPool.TCP != nil {
 					if app.Spec.OptTraits.CircuitBreaking.ConnectionPool.TCP.MaxConnections <= 0 {
 						return fmt.Errorf("app.Spec.OptTraits.CircuitBreaking.ConnectionPool.TCP.MaxConnections must >=0")
 					}
@@ -294,29 +297,28 @@ func (app *Application) Validation() error {
 						}
 						return fmt.Errorf("app.Spec.OptTraits.CircuitBreaking.ConnectionPool.TCP.ConnectTimeout must end with s or m")
 					}
-					if !reflect.DeepEqual(app.Spec.OptTraits.CircuitBreaking.OutlierDetection, OutlierDetection{}) {
-						if app.Spec.OptTraits.CircuitBreaking.OutlierDetection.BaseEjectionTime == "" || app.Spec.OptTraits.CircuitBreaking.OutlierDetection.Interval == "" || app.Spec.OptTraits.CircuitBreaking.OutlierDetection.ConsecutiveErrors <= 0 || app.Spec.OptTraits.CircuitBreaking.OutlierDetection.MaxEjectionPercent <= 0 {
-							return fmt.Errorf("Please check httpretry configuration")
-						}
-					}
-					match, err = checkinterval(app.Spec.OptTraits.CircuitBreaking.OutlierDetection.BaseEjectionTime)
-					if !match {
-						if err != nil {
-							return fmt.Errorf("app.Spec.OptTraits.CircuitBreaking.OutlierDetection.BaseEjectionTime regex failed errinfo is %v", err)
-						}
-						return fmt.Errorf("app.Spec.OptTraits.CircuitBreaking.OutlierDetection.BaseEjectionTime must end with s or m")
-					}
-					match, err = checkinterval(app.Spec.OptTraits.CircuitBreaking.OutlierDetection.Interval)
-					if !match {
-						if err != nil {
-							return fmt.Errorf("app.Spec.OptTraits.CircuitBreaking.OutlierDetection.Interval regex failed errinfo is %v", err)
-						}
-						return fmt.Errorf("app.Spec.OptTraits.CircuitBreaking.OutlierDetection.Interval must end with s or m")
-					}
 				}
-
 			}
-
+			//if !reflect.DeepEqual(app.Spec.OptTraits.CircuitBreaking.OutlierDetection, OutlierDetection{}) {
+			if app.Spec.OptTraits.CircuitBreaking.OutlierDetection != nil {
+				if app.Spec.OptTraits.CircuitBreaking.OutlierDetection.BaseEjectionTime == "" || app.Spec.OptTraits.CircuitBreaking.OutlierDetection.Interval == "" || app.Spec.OptTraits.CircuitBreaking.OutlierDetection.ConsecutiveErrors <= 0 || app.Spec.OptTraits.CircuitBreaking.OutlierDetection.MaxEjectionPercent <= 0 {
+					return fmt.Errorf("Please check httpretry configuration")
+				}
+				match, err := checkinterval(app.Spec.OptTraits.CircuitBreaking.OutlierDetection.BaseEjectionTime)
+				if !match {
+					if err != nil {
+						return fmt.Errorf("app.Spec.OptTraits.CircuitBreaking.OutlierDetection.BaseEjectionTime regex failed errinfo is %v", err)
+					}
+					return fmt.Errorf("app.Spec.OptTraits.CircuitBreaking.OutlierDetection.BaseEjectionTime must end with s or m")
+				}
+				match, err = checkinterval(app.Spec.OptTraits.CircuitBreaking.OutlierDetection.Interval)
+				if !match {
+					if err != nil {
+						return fmt.Errorf("app.Spec.OptTraits.CircuitBreaking.OutlierDetection.Interval regex failed errinfo is %v", err)
+					}
+					return fmt.Errorf("app.Spec.OptTraits.CircuitBreaking.OutlierDetection.Interval must end with s or m")
+				}
+			}
 		}
 	}
 	return nil
