@@ -132,7 +132,8 @@ func (app *Application) Validation() error {
 					}
 				}
 			}
-			if !reflect.DeepEqual(con.LivenessProbe, HealthProbe{}) {
+			//if !reflect.DeepEqual(con.LivenessProbe, HealthProbe{}) {
+			if con.LivenessProbe != nil {
 				if !reflect.DeepEqual(con.LivenessProbe.Exec, ExecAction{}) {
 					if len(con.LivenessProbe.Exec.Command) == 0 {
 						return fmt.Errorf("If Exec option has configured,command can't be null")
@@ -165,7 +166,8 @@ func (app *Application) Validation() error {
 					return fmt.Errorf("LivenessProbe's InitialDelaySeconds PeriodSeconds SuccessThreshold FailureThreshold can't <= 0")
 				}
 			}
-			if !reflect.DeepEqual(con.ReadinessProbe, HealthProbe{}) {
+			//if !reflect.DeepEqual(con.ReadinessProbe, HealthProbe{}) {
+			if con.ReadinessProbe != nil {
 				if !reflect.DeepEqual(con.ReadinessProbe.Exec, ExecAction{}) {
 					if len(con.ReadinessProbe.Exec.Command) == 0 {
 						return fmt.Errorf("If Exec option has configured,command can't be null")
@@ -202,12 +204,15 @@ func (app *Application) Validation() error {
 		if com.ComponentTraits.Replicas <= 0 {
 			return fmt.Errorf("app.spec.component.componenttraits.replicas at least 1")
 		}
-		if com.ComponentTraits.CustomMetric.Enable {
-			if com.ComponentTraits.CustomMetric.Uri == "" {
-				return fmt.Errorf("If com.ComponentTraits.CustomMetric.Enable is true,com.ComponentTraits.CustomMetric.Enable.uri can't be empty")
+		if com.ComponentTraits.CustomMetric != nil {
+			if com.ComponentTraits.CustomMetric.Enable {
+				if com.ComponentTraits.CustomMetric.Uri == "" {
+					return fmt.Errorf("If com.ComponentTraits.CustomMetric.Enable is true,com.ComponentTraits.CustomMetric.Enable.uri can't be empty")
+				}
 			}
 		}
-		if !reflect.DeepEqual(com.ComponentTraits.Autoscaling, Autoscaling{}) {
+		//if !reflect.DeepEqual(com.ComponentTraits.Autoscaling, Autoscaling{}) {
+		if com.ComponentTraits.Autoscaling != nil {
 			if com.ComponentTraits.Autoscaling.Metric == "" || com.ComponentTraits.Autoscaling.Threshold <= 0 || com.ComponentTraits.Autoscaling.MinReplicas <= 0 || com.ComponentTraits.Autoscaling.MaxReplicas <= com.ComponentTraits.Autoscaling.MinReplicas {
 				return fmt.Errorf("Please check autoscaling configuration")
 			}
@@ -229,7 +234,8 @@ func (app *Application) Validation() error {
 				}
 			}
 		}
-		if !(reflect.DeepEqual(app.Spec.OptTraits.RateLimit, RateLimit{})) {
+		//if !(reflect.DeepEqual(app.Spec.OptTraits.RateLimit, RateLimit{})) {
+		if app.Spec.OptTraits.RateLimit != nil {
 			if app.Spec.OptTraits.RateLimit.TimeDuration == "" || app.Spec.OptTraits.RateLimit.RequestAmount <= 0 {
 				return fmt.Errorf("application.opttraits.ratelimit.timeduration and requestamount can't be empty at the same time")
 			}
@@ -248,16 +254,18 @@ func (app *Application) Validation() error {
 				}
 			}
 		}
-		if len(app.Spec.OptTraits.WhiteList.Users) != 0 {
-			for _, i := range app.Spec.OptTraits.WhiteList.Users {
-				matched, err := regexp.MatchString(`^.*@.*$`, i)
-				if err != nil {
-					return fmt.Errorf("Regexp application.opttraits.whitelist.users %s failed, ErrorInfo is %s", i, err)
-				}
-				if matched {
-					continue
-				} else {
-					return fmt.Errorf("Regexp application.opttraits.whitelist.users %s failed", i)
+		if app.Spec.OptTraits.WhiteList != nil {
+			if len(app.Spec.OptTraits.WhiteList.Users) != 0 {
+				for _, i := range app.Spec.OptTraits.WhiteList.Users {
+					matched, err := regexp.MatchString(`^.*@.*$`, i)
+					if err != nil {
+						return fmt.Errorf("Regexp application.opttraits.whitelist.users %s failed, ErrorInfo is %s", i, err)
+					}
+					if matched {
+						continue
+					} else {
+						return fmt.Errorf("Regexp application.opttraits.whitelist.users %s failed", i)
+					}
 				}
 			}
 		}
