@@ -59,18 +59,18 @@ type VolumeMounter struct {
 }
 
 type ComponentTraitsForOpt struct {
-	LoadBalancer    LoadBalancerSettings `json:"loadBalancer,omitempty"`
-	GrayRelease     map[string]int       `json:"grayRelease,omitempty"`
-	ImagePullConfig ImagePullConfig      `json:"imagePullConfig,omitempty"`
-	StaticIP        bool                 `json:"staticIP,omitempty"`
-	VolumeMounter   VolumeMounter        `json:"volumeMounter,omitempty"`
-	Ingress         AppIngress           `json:"ingress"`
-	WhiteList       WhiteList            `json:"whiteList,omitempty"`
-	Eject           []string             `json:"eject,omitempty"`
-	Fusing          Fusing               `json:"fusing,omitempty"` //zk
-	RateLimit       RateLimit            `json:"rateLimit,omitempty"`
-	CircuitBreaking CircuitBreaking      `json:"circuitbreaking,omitempty"` //zk
-	HTTPRetry       HTTPRetry            `json:"httpretry,omitempty"`
+	LoadBalancer    *LoadBalancerSettings `json:"loadBalancer,omitempty"`
+	GrayRelease     map[string]int        `json:"grayRelease,omitempty"`
+	ImagePullConfig *ImagePullConfig      `json:"imagePullConfig,omitempty"`
+	StaticIP        bool                  `json:"staticIP,omitempty"`
+	VolumeMounter   *VolumeMounter        `json:"volumeMounter,omitempty"`
+	Ingress         AppIngress            `json:"ingress"`
+	WhiteList       *WhiteList            `json:"whiteList,omitempty"`
+	Eject           []string              `json:"eject,omitempty"`
+	Fusing          *Fusing               `json:"fusing,omitempty"` //zk
+	RateLimit       *RateLimit            `json:"rateLimit,omitempty"`
+	CircuitBreaking *CircuitBreaking      `json:"circuitbreaking,omitempty"` //zk
+	HTTPRetry       *HTTPRetry            `json:"httpretry,omitempty"`
 }
 
 //zk
@@ -93,18 +93,18 @@ type HTTPRetry struct {
 
 //zk
 type CircuitBreaking struct {
-	ConnectionPool    ConnectionPoolSettings `json:"connectionPool,omitempty"`
-	OutlierDetection  OutlierDetection       `json:"outlierDetection,omitempty"`
-	PortLevelSettings []PortTrafficPolicy    `json:"portLevelSettings,omitempty"`
+	ConnectionPool    *ConnectionPoolSettings `json:"connectionPool,omitempty"`
+	OutlierDetection  *OutlierDetection       `json:"outlierDetection,omitempty"`
+	PortLevelSettings []PortTrafficPolicy     `json:"portLevelSettings,omitempty"`
 }
 
 type ConnectionPoolSettings struct {
 
 	// Settings common to both HTTP and TCP upstream connections.
-	TCP TCPSettings `json:"tcp,omitempty"`
+	TCP *TCPSettings `json:"tcp,omitempty"`
 
 	// HTTP connection pool settings.
-	HTTP HTTPSettings `json:"http,omitempty"`
+	HTTP *HTTPSettings `json:"http,omitempty"`
 }
 
 type PortSelector struct {
@@ -173,8 +173,8 @@ type PortTrafficPolicy struct {
 	OutlierDetection OutlierDetection       `json:"outlierDetection,omitempty"`
 }
 type LoadBalancerSettings struct {
-	Simple         SimpleLB         `json:"simple,omitempty"`
-	ConsistentHash ConsistentHashLB `json:"consistentHash,omitempty"`
+	Simple         SimpleLB          `json:"simple,omitempty"`
+	ConsistentHash *ConsistentHashLB `json:"consistentHash,omitempty"`
 }
 
 type ConsistentHashLB struct {
@@ -197,12 +197,12 @@ type ImagePullConfig struct {
 }
 
 type ComponentTraits struct {
-	Replicas                      int32          `json:"replicas"`
-	CustomMetric                  CustomMetric   `json:"custommetric,omitempty"` //zk
-	Logcollect                    bool           `json:"logcollect,,omitempty"`
-	TerminationGracePeriodSeconds int64          `json:"terminationGracePeriodSeconds,omitempty"` //zk
-	SchedulePolicy                SchedulePolicy `json:"schedulePolicy,omitempty"`
-	Autoscaling                   Autoscaling    `json:"autoscaling,omitempty"` //zk
+	Replicas                      int32           `json:"replicas"`
+	CustomMetric                  *CustomMetric   `json:"custommetric,omitempty"` //zk
+	Logcollect                    bool            `json:"logcollect,,omitempty"`
+	TerminationGracePeriodSeconds int64           `json:"terminationGracePeriodSeconds,omitempty"` //zk
+	SchedulePolicy                *SchedulePolicy `json:"schedulePolicy,omitempty"`
+	Autoscaling                   *Autoscaling    `json:"autoscaling,omitempty"` //zk
 }
 
 type Disk struct {
@@ -252,12 +252,12 @@ type ComponentContainer struct {
 
 	Resources CResource `json:"resources,omitempty"`
 
-	LivenessProbe HealthProbe `json:"livenessProbe,omitempty"`
+	LivenessProbe *HealthProbe `json:"livenessProbe,omitempty"`
 
-	ReadinessProbe HealthProbe `json:"readinessProbe,omitempty"`
+	ReadinessProbe *HealthProbe `json:"readinessProbe,omitempty"`
 
 	ImagePullPolicy PullPolicy       `json:"imagePullPolicy,omitempty"`
-	Lifecycle       CLifecycle       `json:"lifecycle,omitempty"`
+	Lifecycle       *CLifecycle      `json:"lifecycle,omitempty"`
 	Config          []ConfigFile     `json:"config,omitempty"`
 	ImagePullSecret string           `json:"imagePullSecret,omitempty"`
 	SecurityContext *SecurityContext `json:"securityContext,omitempty"`
@@ -265,9 +265,9 @@ type ComponentContainer struct {
 
 type SchedulePolicy struct {
 	NodeSelector    map[string]string `json:"nodeSelector,omitempty"`
-	NodeAffinity    CNodeAffinity     `json:"nodeAffinity,omitempty"`
-	PodAffinity     CPodAffinity      `json:"podAffinity,omitempty"`
-	PodAntiAffinity CPodAntiAffinity  `json:"podAntiAffinity,omitempty"`
+	NodeAffinity    *CNodeAffinity    `json:"nodeAffinity,omitempty"`
+	PodAffinity     *CPodAffinity     `json:"podAffinity,omitempty"`
+	PodAntiAffinity *CPodAntiAffinity `json:"podAntiAffinity,omitempty"`
 }
 
 type CPodAntiAffinity struct {

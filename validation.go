@@ -120,6 +120,9 @@ func (app *Application) Validation() error {
 				}*/
 				if len(con.Resources.Volumes) != 0 {
 					for _, v := range con.Resources.Volumes {
+						if reflect.DeepEqual(v, CVolume{}) {
+							continue
+						}
 						if v.Name == "" || v.MountPath == "" {
 							return fmt.Errorf("application.components.container.resource.volumes's name and mountpath can't be empty at the same time")
 						}
@@ -213,7 +216,7 @@ func (app *Application) Validation() error {
 	if (reflect.DeepEqual(app.Spec.OptTraits, ComponentTraitsForOpt{})) {
 		return fmt.Errorf("application.opttraits.ingress must be configured")
 	} else {
-		if (app.Spec.OptTraits.Ingress == AppIngress{}) {
+		if reflect.DeepEqual(app.Spec.OptTraits.Ingress, AppIngress{}) {
 			return fmt.Errorf("application.opttraits.ingress must be configured")
 		} else {
 			if app.Spec.OptTraits.Ingress.Host == "" || app.Spec.OptTraits.Ingress.Path == "" || app.Spec.OptTraits.Ingress.ServerPort <= 0 {

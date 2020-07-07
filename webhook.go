@@ -206,7 +206,7 @@ func (whsvr *WebhookServer) validate(ar *v1beta1.AdmissionReview) *v1beta1.Admis
 		if err != nil {
 			allowed = false
 			result = &metav1.Status{
-				Reason:  "Some fields fail validation",
+				Reason:  "Data validation failed",
 				Message: err.Error(),
 			}
 		}
