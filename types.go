@@ -271,18 +271,18 @@ type SchedulePolicy struct {
 }
 
 type CPodAntiAffinity struct {
-	HardAffinity              bool `json:"hardAffinity,omitempty"`
-	CLabelSelectorRequirement `json:"labelSelectorRequirement,omitempty"`
+	HardAffinity               bool `json:"hardAffinity,omitempty"`
+	*CLabelSelectorRequirement `json:"labelSelectorRequirement,omitempty"`
 }
 
 type CPodAffinity struct {
-	HardAffinity              bool `json:"hardAffinity,omitempty"`
-	CLabelSelectorRequirement `json:"labelSelectorRequirement,omitempty"`
+	HardAffinity               bool `json:"hardAffinity,omitempty"`
+	*CLabelSelectorRequirement `json:"labelSelectorRequirement,omitempty"`
 }
 
 type CNodeAffinity struct {
-	HardAffinity              bool `json:"hardAffinity,omitempty"`
-	CLabelSelectorRequirement `json:"labelSelectorRequirement,omitempty"`
+	HardAffinity               bool `json:"hardAffinity,omitempty"`
+	*CLabelSelectorRequirement `json:"labelSelectorRequirement,omitempty"`
 }
 
 type CLabelSelectorRequirement struct {
