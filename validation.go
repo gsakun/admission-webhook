@@ -168,26 +168,26 @@ func (app *Application) Validation() error {
 			}
 			//if !reflect.DeepEqual(con.ReadinessProbe, HealthProbe{}) {
 			if con.ReadinessProbe != nil {
-				if !reflect.DeepEqual(con.ReadinessProbe.Exec, ExecAction{}) {
+				if con.ReadinessProbe.Exec != nil {
 					if len(con.ReadinessProbe.Exec.Command) == 0 {
 						return fmt.Errorf("If Exec option has configured,command can't be null")
 					}
-					if !reflect.DeepEqual(con.ReadinessProbe.HTTPGet, HTTPGetAction{}) {
+					if con.ReadinessProbe.HTTPGet != nil {
 						return fmt.Errorf("Exec has been configured in ReadinessProbe,The other options cannot be selected")
 					}
-					if !reflect.DeepEqual(con.ReadinessProbe.TCPSocket, TCPSocketAction{}) {
+					if con.ReadinessProbe.TCPSocket != nil {
 						return fmt.Errorf("Exec has been configured in ReadinessProbe,The other options cannot be selected")
 					}
 				} else {
-					if !reflect.DeepEqual(con.ReadinessProbe.HTTPGet, HTTPGetAction{}) {
+					if con.ReadinessProbe.HTTPGet != nil {
 						if con.ReadinessProbe.HTTPGet.Port <= 0 || con.ReadinessProbe.HTTPGet.Path == "" {
 							return fmt.Errorf("Please check application.components.containers.ReadinessProbe's httpget field")
 						}
-						if !reflect.DeepEqual(con.ReadinessProbe.TCPSocket, TCPSocketAction{}) {
+						if con.ReadinessProbe.TCPSocket != nil {
 							return fmt.Errorf("HttpGet has been configured in ReadinessProbe,The other options cannot be selected")
 						}
 					} else {
-						if !reflect.DeepEqual(con.ReadinessProbe.TCPSocket, TCPSocketAction{}) {
+						if con.ReadinessProbe.TCPSocket != nil {
 							if con.ReadinessProbe.TCPSocket.Port <= 0 {
 								return fmt.Errorf("Please check application.components.containers.ReadinessProbe's Tcpsocket field")
 							}
@@ -269,7 +269,7 @@ func (app *Application) Validation() error {
 				}
 			}
 		}
-		if !reflect.DeepEqual(app.Spec.OptTraits.HTTPRetry, HTTPRetry{}) {
+		if app.Spec.OptTraits.HTTPRetry != nil {
 			if app.Spec.OptTraits.HTTPRetry.Attempts <= 0 || app.Spec.OptTraits.HTTPRetry.PerTryTimeout == "" {
 				return fmt.Errorf("Please check httpretry configuration")
 			}
