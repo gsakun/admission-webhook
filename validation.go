@@ -56,7 +56,14 @@ func (app *Application) Validation() error {
 		}
 		for _, con := range com.Containers {
 			if con.Name == "" {
-				return fmt.Errorf("Please specify the %s's container name.", com.Name)
+				return fmt.Errorf("Please specify the %s's container name.", con.Name)
+			}
+			matched, err := regexp.MatchString(`^[a-z]([-a-z0-9]*[a-z0-9])?`, con.Name)
+			if err != nil {
+				return fmt.Errorf("Regexp application.compenent.container.name failed, ErrorInfo is %s", err)
+			}
+			if !matched {
+				return fmt.Errorf("Component.container.name %s is invalid a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name',  or 'abc-123', regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?'", con.Name)
 			}
 			if len(con.Env) != 0 {
 				for _, env := range con.Env {
@@ -92,6 +99,14 @@ func (app *Application) Validation() error {
 			}
 			if con.Image == "" {
 				return fmt.Errorf("Image can't be empty")
+			} else {
+				matched, err := regexp.MatchString(`[^\s]*/[-a-z0-9_]+/[-a-z0-9_]+:[.a-z0-9-_]+`, con.Image)
+				if err != nil {
+					return fmt.Errorf("Regexp application.component.container.image failed, ErrorInfo is %s", err)
+				}
+				if !matched {
+					return fmt.Errorf(`application.component.container.image %s is invalid  regex used for validation is '[^\s]*/[-a-z0-9_]+/[-a-z0-9_]+:[.a-z0-9-_]+'`, con.Name)
+				}
 			}
 			if len(con.Ports) != 0 {
 				for _, port := range con.Ports {
